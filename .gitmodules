@@ -1,0 +1,6 @@
+[submodule "imutils-cpp"]
+	path = imutils-cpp
+	url = https://github.com/canh25xp/imutils-cpp
+[submodule "yaml-cpp"]
+	path = yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

@@ -1,0 +1,7 @@
+.vscode
+# Assets
+screenshots
+data/images/*
+log/*
+runs/*
+build/
