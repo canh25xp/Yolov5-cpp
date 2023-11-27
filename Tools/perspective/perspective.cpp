@@ -130,7 +130,7 @@ void onMouse(int event, int x, int y, int f, void*) {
         prspectiveTransform();
     showImage();
 }
-int main() {
+int main(int argc, char** argv) {
 
     cout << "Right click each corner of card to select the point to be trasnformed."
         << endl
@@ -156,7 +156,7 @@ int main() {
     cout << "------> Press 'r' to reset quad points" << endl;
     cout << "------> Press 'Esc' to quit" << endl << endl;
 
-    src = imread("input\\warp_perspective\\cmt9_back.jpg");
+    src = imread(argv[1]);
 
     namedWindow(winName, 1);
     setMouseCallback(winName, onMouse, NULL);

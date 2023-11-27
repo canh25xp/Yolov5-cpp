@@ -1,1 +1,5 @@
 add_subdirectory(autoGenRotate)
+add_subdirectory(perspective)
+add_subdirectory(affineTransform)
+add_subdirectory(boundary)
+add_subdirectory(compareAngles)
