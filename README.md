@@ -11,6 +11,11 @@ git submodule update --init
 The dependencies is manage with [vcpkg](https://github.com/microsoft/vcpkg).
 Therefore, you have to have it installed and put the VCPKG_ROOT in the environment variable.
 ```
+cmake --preset vcpkg
+cmake --build build --config Release
+```
+Alternatively :
+```
 mkdir build
 cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
 cmake --build build --config Release
