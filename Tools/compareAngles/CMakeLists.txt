@@ -1,1 +1,2 @@
 add_executable(compareAngles compareAngles.cpp)
+target_link_libraries(compareAngles compiler_flags)
