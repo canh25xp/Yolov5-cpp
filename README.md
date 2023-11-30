@@ -17,7 +17,7 @@ cmake --build build --config Release
 Alternatively :
 ```
 mkdir build
-cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
+cmake -B build -S . --toolchain=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
 cmake --build build --config Release
 ```
 ### 3. Pull model files
