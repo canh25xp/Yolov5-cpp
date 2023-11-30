@@ -6,7 +6,7 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 target_compile_options(
     compiler_flags
     INTERFACE
-    "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+    "$<${msvc_cxx}:$<BUILD_INTERFACE:-W1>>"
     "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
 )
 
