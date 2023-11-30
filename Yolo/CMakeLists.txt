@@ -11,21 +11,21 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
-# set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
-# set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
-# target_compile_options(
-#     Yolo
-#     INTERFACE
-#     "$<${msvc_cxx}:$<BUILD_INTERFACE:-W1>>"
-#     "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
-# )
+set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
+set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
+target_compile_options(
+    Yolo
+    INTERFACE
+    "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
+)
 
+# Add(uncomment) the following line if you haven't add opencv_dir to your system enviroment
+# set(Opencv_Dir "D:/Lib/opencv/build/install/x64/vc17")
 find_package(OpenCV REQUIRED)
 
 # Add(uncomment) the following line if you haven't add ncnn_dir to your system enviroment
 # set(ncnn_DIR "D:/Lib/ncnn/build/install/lib/cmake/ncnn" CACHE PATH "Directory that contains ncnnConfig.cmake")
-# set(Opencv_Dir "D:/Lib/opencv/build/install/x64/vc17")
-
 find_package(ncnn REQUIRED)
 
 # MESSAGE(STATUS "Include dirs ${OpenCV_INCLUDE_DIRS}")
