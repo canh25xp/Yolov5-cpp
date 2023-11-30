@@ -1,12 +1,15 @@
-add_library(Yolo STATIC yolo.cpp utils.cpp layers.cpp parser.cpp timer.cpp pch.cpp)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# target_include_directories(
-#     Yolo
-#     INTERFACE
-#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-#     )
+set(Yolo_Src yolo.cpp utils.cpp layers.cpp parser.cpp timer.cpp pch.cpp)
 
-target_include_directories(Yolo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(Yolo STATIC ${Yolo_Src})
+
+target_include_directories(
+    Yolo
+    INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    )
 
 # set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 # set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
