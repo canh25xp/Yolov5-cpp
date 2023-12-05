@@ -43,11 +43,17 @@ public:
     bool dynamic;
     bool agnostic;
     bool fp32;
+    bool noBbox;
+    bool noLabel;
+    bool drawMinRect;
 
     int target_size;
     float prob_threshold;
     float nms_threshold;
     int max_object;
+    
+    int padding;
+    int thickness;
 
     std::string project;
     std::string name;

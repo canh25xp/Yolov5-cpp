@@ -103,6 +103,8 @@ Utils::Utils() {
     this->show              = false;
     this->dynamic           = false;
     this->agnostic          = false;
+    this->noBbox            = false;
+    this->noLabel           = false;
     this->target_size       = 640;
     this->prob_threshold    = 0.25f;
     this->nms_threshold     = 0.45f;
@@ -208,6 +210,11 @@ void Utils::set_arguments(int argc, char** argv) {
     this->max_object               = parser.get("--max-obj", 1);
     this->fp32                     = parser.has("--fp32");
     this->drawContour              = parser.has("--draw-contour");
+    this->noBbox                   = parser.has("--no-bbox");
+    this->noLabel                  = parser.has("--no-label");
+    this->drawMinRect              = parser.has("--draw-minrect");
+    this->thickness                = parser.get("--line-thickness", 3);
+    this->padding                  = parser.get("--padding", 0);
 
     LOG("------------------------------------------------\n");
     LOG(parser.getArgCount() << " argument(s) passed\n");
@@ -343,7 +350,17 @@ void Utils::draw_mask(cv::Mat& bgr, const cv::Mat& mask, const unsigned char* co
 
 void Utils::draw_RotatedRect(cv::Mat& bgr, const cv::RotatedRect& rr, const cv::Scalar& cc, int thickness) {
     cv::Point2f vertices[4];
-    rr.points(vertices);
+
+    if(padding!=0){
+        auto new_h = rr.size.height + padding;
+        auto new_w = rr.size.width + padding;
+        cv::RotatedRect padding_rect(rr.center, cv::Size2f(new_w, new_h), rr.angle);
+        padding_rect.points(vertices);
+    }
+
+    else
+        rr.points(vertices);
+
     for (int i = 0; i < 4; i++)
         cv::line(bgr, vertices[i], vertices[(i + 1) % 4], cc, thickness);
 }
@@ -391,15 +408,18 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
         if (i != objCount - 1)
             labels.append("\n");
 
-        cv::rectangle(out, obj.rect, cc);
-        draw_label(out, obj.rect, class_names[obj.label] + " " + cv::format("%.2f", obj.prob * 100) + "%");
+        if(!noBbox)
+            cv::rectangle(out, obj.rect, cc, thickness);
+        
+        if(!noLabel)
+            draw_label(out, obj.rect, class_names[obj.label] + " " + cv::format("%.2f", obj.prob * 100) + "%");
 
         cv::Mat binMask;
         cv::threshold(obj.cv_mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization
 
         std::vector<cv::Point> contour = mask2segment(obj.cv_mask);
         if (drawContour)
-            cv::polylines(out, contour, true, cc, 1);
+            cv::polylines(out, contour, true, cc, thickness);
         else
             draw_mask(out, obj.cv_mask, color);
 
@@ -413,7 +433,8 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
                 rotated = in(obj.rect);
             else {
                 cv::RotatedRect rr = cv::minAreaRect(contour);
-                //draw_RotatedRect(out, rr, cv::Scalar(0,0,255));
+                if(drawMinRect)
+                    draw_RotatedRect(out, rr, cv::Scalar(0,255,0), thickness);
                 rotAngle = getRotatedRectImg(in, rotated, rr);
             }
             cv::utils::fs::createDirectory(rotateFolder);
