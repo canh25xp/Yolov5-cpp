@@ -1,5 +1,14 @@
-#include "pch.hpp"
 #include "utils.hpp"
+#include <iostream>
+#include <filesystem>
+#include <fstream>
+
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <yaml-cpp/yaml.h>
 
 const unsigned char colors[81][3] = {
     {56,  0,   255},

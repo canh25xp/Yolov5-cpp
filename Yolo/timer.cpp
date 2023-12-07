@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "timer.hpp"
+#include <iostream>
 
 Timer::Timer(const char* _task){
     task = _task;

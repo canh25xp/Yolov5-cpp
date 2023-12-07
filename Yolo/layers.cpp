@@ -1,4 +1,4 @@
-#include "pch.hpp"
+#include <ncnn/net.h>
 
 void Matmul(const std::vector<ncnn::Mat>& bottom_blobs, ncnn::Mat& top_blob) {
     ncnn::Option opt;

@@ -1,4 +1,3 @@
-#include "pch.hpp"
 #include "parser.hpp"
 
 Parser::Parser(int& argc, char** argv) {

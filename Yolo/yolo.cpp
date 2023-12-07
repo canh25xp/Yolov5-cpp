@@ -1,6 +1,9 @@
-#include "pch.hpp"
 #include "yolo.hpp"
 #include "layers.hpp"
+
+#include <opencv2/core/mat.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #define MAX_STRIDE  64
 #define PERMUTE     0 // Using the permute layer output. Otherwise, use convolution layer
