@@ -31,4 +31,4 @@ git lfs pull
 ```
 build\Yolov5-seg\Release\Yolov5-seg.exe --show
 ```
-![bruh](./runs/idcard/sample/sample.jpg)
+![bruh](./runs/idcard/exp/sample.jpg)
