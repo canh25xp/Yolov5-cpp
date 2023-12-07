@@ -1,12 +1,7 @@
 #pragma once
-#include "detector.hpp"
 #include <filesystem>
-
-#ifdef CV_PARSER
-#include <opencv2/core/utility.hpp>
-#else
-#include "parser.hpp"
-#endif
+#include <vector>
+#include <opencv2/core.hpp>
 
 enum strategy {
     concatenatedContour = 0,    //concatenate all segments
@@ -24,36 +19,35 @@ extern std::vector<std::string> IMG_FORMATS;
 extern std::vector<std::string> VID_FORMATS;
 
 namespace Yolo {
+class Detector;
+struct Object;
 class Utils {
 public:
     Utils();
 
-    Utils(int argc, char** argv);
-
     ~Utils();
 
 public:
-    bool save;
-    bool drawContour;
-    bool crop;
-    bool save_txt;
-    bool save_mask;
-    bool rotate;
-    bool show;
-    bool dynamic;
-    bool agnostic;
-    bool fp32;
-    bool noBbox;
-    bool noLabel;
-    bool drawMinRect;
+    bool save = false;
+    bool drawContour = false;
+    bool crop = false;
+    bool save_txt = false;
+    bool save_mask = false;
+    bool rotate = false;
+    bool show = false;
+    bool dynamic = false;
+    bool agnostic = false;
+    bool fp32 = false;
+    bool noBbox = false;
+    bool noLabel = false;
+    bool drawMinRect = false;
 
-    int target_size;
-    float prob_threshold;
-    float nms_threshold;
-    int max_object;
-    
-    int padding;
-    int thickness;
+    int target_size = 640;
+    float prob_threshold = 0.25f;
+    float nms_threshold = 0.45f;
+    int max_object = 1;
+    int padding = 0;
+    int thickness = 3;
 
     std::string project;
     std::string name;
@@ -68,6 +62,8 @@ public:
 
     int load(const std::filesystem::path& bin, const std::filesystem::path& param);
 
+    // int load(const Detector& detector);
+
     void video(std::string inputPath);
 
     void image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder);
@@ -80,10 +76,8 @@ public:
 
     void get_class_names(const std::filesystem::path& data);
 
-    void set_arguments(int argc, char** argv);
-
 private:
-    Detector detector;
+    Detector* detector;
     std::vector<std::string> class_names;
 
 private:

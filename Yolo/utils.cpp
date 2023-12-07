@@ -1,6 +1,8 @@
 #include "utils.hpp"
 #include "object.hpp"
+#include "detector.hpp"
 #include <iostream>
+#include <vector>
 #include <filesystem>
 #include <fstream>
 
@@ -100,38 +102,16 @@ std::vector<std::string> VID_FORMATS {"asf", "avi", "gif", "m4v", "mkv", "mov", 
 
 namespace Yolo {
 Utils::Utils() {
-    this->model = "models/yolov5s-seg.ncnn";
-    this->data = "data/coco128.txt";
-    this->input = "input/test.jpg";
-    this->project = "runs/idcard";
-    this->name = "exp";
-    this->save = false;
-    this->drawContour = false;
-    this->crop = false;
-    this->save_txt = false;
-    this->save_mask = false;
-    this->rotate = false;
-    this->show = false;
-    this->dynamic = false;
-    this->agnostic = false;
-    this->noBbox = false;
-    this->noLabel = false;
-    this->target_size = 640;
-    this->prob_threshold = 0.25f;
-    this->nms_threshold = 0.45f;
-    this->max_object = 100;
-}
-
-Utils::Utils(int argc, char** argv) {
-    set_arguments(argc, argv);
+    detector = new Detector();
 }
 
 Utils::~Utils() {
+    delete detector;
 }
 
 int Utils::run() {
     if (this->fp32)
-        detector.use_fp32();
+        detector->use_fp32();
 
     if (load(this->model))
         return -1;
@@ -162,77 +142,77 @@ int Utils::run() {
     return 1;
 }
 
-void Utils::set_arguments(int argc, char** argv) {
-#ifdef CV_PARSER
-    const cv::String keys =
-        "{help h usage ? | | print this message }"
-        "{model |models/yolov5s-seg-idcard-best-2.ncnn | path to model.ncnn }"
-        "{data |data/idcard.txt | path to data.txt }"
-        "{input source|input/test.jpg | path to image, video, or folder. 0 for camera}"
-        "{output |output | outputfolder}"
-        "{crop | | crop image}"
-        "{save | | save image to output folder specified}"
-        "{save-txt | | save}"
-        "{save-mask | | save mask}"
-        "{rotate | | rotate}"
-        "{show | | rotate}"
-        "{size |640 | size}"
-        "{conf |0.25 | size}"
-        "{nms |0.45 | nms}"
-        "{max-obj |1 | max obj}"
-        "{dynamic | | dynamic}"
-        "{agnostic | | agnostic}";
+// void Utils::set_arguments(int argc, char** argv) {
+// #ifdef CV_PARSER
+//     const cv::String keys =
+//         "{help h usage ? | | print this message }"
+//         "{model |models/yolov5s-seg-idcard-best-2.ncnn | path to model.ncnn }"
+//         "{data |data/idcard.txt | path to data.txt }"
+//         "{input source|input/test.jpg | path to image, video, or folder. 0 for camera}"
+//         "{output |output | outputfolder}"
+//         "{crop | | crop image}"
+//         "{save | | save image to output folder specified}"
+//         "{save-txt | | save}"
+//         "{save-mask | | save mask}"
+//         "{rotate | | rotate}"
+//         "{show | | rotate}"
+//         "{size |640 | size}"
+//         "{conf |0.25 | size}"
+//         "{nms |0.45 | nms}"
+//         "{max-obj |1 | max obj}"
+//         "{dynamic | | dynamic}"
+//         "{agnostic | | agnostic}";
 
-    cv::CommandLineParser parser(argc, argv, keys);
-    this->model                    = parser.get<std::string>("model");
-    this->data                     = parser.get<std::string>("data");
-    this->input                    = parser.get<std::string>("input");
-    this->output                   = parser.get<std::string>("runs");
-    this->crop                     = parser.has("crop");
-    this->save                     = parser.has("save");
-    this->saveTxt                  = parser.has("save-txt");
-    this->saveMask		           = parser.has("save-mask");
-    this->rotate			       = parser.has("rotate");
-    this->show                     = parser.has("show");
-    detector.target_size              = parser.get<int>("size");
-    detector.prob_threshold           = parser.get<float>("conf");
-    detector.nms_threshold            = parser.get<float>("nms");
-    detector.max_object               = parser.get<int>("max-obj");
-    detector.dynamic                  = parser.has("dynamic");
-    detector.agnostic                 = parser.has("agnostic");
-#else
-    Parser parser (argc, argv);
-    this->model                    = parser.get("--model", "weights/yolov5s-seg-idcard-best-2.ncnn");
-    this->data                     = parser.get("--data", "data/idcard.yaml");
-    this->input                    = parser.get("--source", "data/images/sample.jpg");
-    this->project                  = parser.get("--project", "runs/idcard");
-    this->name                     = parser.get("--name", "exp");
-    this->crop                     = parser.has("--crop");
-    this->save                     = parser.has("--save");
-    this->save_txt                 = parser.has("--save-txt");
-    this->save_mask		           = parser.has("--save-mask");
-    this->rotate		           = parser.has("--rotate");
-    this->show                     = parser.has("--show");
-    this->dynamic                  = parser.has("--dynamic");
-    this->agnostic                 = parser.has("--agnostic");
-    this->target_size              = parser.get("--size", 640);
-    this->prob_threshold           = parser.get("--conf", 0.25f);
-    this->nms_threshold            = parser.get("--nms", 0.45f);
-    this->max_object               = parser.get("--max-obj", 1);
-    this->fp32                     = parser.has("--fp32");
-    this->drawContour              = parser.has("--draw-contour");
-    this->noBbox                   = parser.has("--no-bbox");
-    this->noLabel                  = parser.has("--no-label");
-    this->drawMinRect              = parser.has("--draw-minrect");
-    this->thickness                = parser.get("--line-thickness", 3);
-    this->padding                  = parser.get("--padding", 0);
+//     cv::CommandLineParser parser(argc, argv, keys);
+//     this->model                    = parser.get<std::string>("model");
+//     this->data                     = parser.get<std::string>("data");
+//     this->input                    = parser.get<std::string>("input");
+//     this->output                   = parser.get<std::string>("runs");
+//     this->crop                     = parser.has("crop");
+//     this->save                     = parser.has("save");
+//     this->saveTxt                  = parser.has("save-txt");
+//     this->saveMask		           = parser.has("save-mask");
+//     this->rotate			       = parser.has("rotate");
+//     this->show                     = parser.has("show");
+//     detector.target_size              = parser.get<int>("size");
+//     detector.prob_threshold           = parser.get<float>("conf");
+//     detector.nms_threshold            = parser.get<float>("nms");
+//     detector.max_object               = parser.get<int>("max-obj");
+//     detector.dynamic                  = parser.has("dynamic");
+//     detector.agnostic                 = parser.has("agnostic");
+// #else
+//     Parser parser (argc, argv);
+//     this->model                    = parser.get("--model", "weights/yolov5s-seg-idcard-best-2.ncnn");
+//     this->data                     = parser.get("--data", "data/idcard.yaml");
+//     this->input                    = parser.get("--source", "data/images/sample.jpg");
+//     this->project                  = parser.get("--project", "runs/idcard");
+//     this->name                     = parser.get("--name", "exp");
+//     this->crop                     = parser.has("--crop");
+//     this->save                     = parser.has("--save");
+//     this->save_txt                 = parser.has("--save-txt");
+//     this->save_mask		           = parser.has("--save-mask");
+//     this->rotate		           = parser.has("--rotate");
+//     this->show                     = parser.has("--show");
+//     this->dynamic                  = parser.has("--dynamic");
+//     this->agnostic                 = parser.has("--agnostic");
+//     this->target_size              = parser.get("--size", 640);
+//     this->prob_threshold           = parser.get("--conf", 0.25f);
+//     this->nms_threshold            = parser.get("--nms", 0.45f);
+//     this->max_object               = parser.get("--max-obj", 1);
+//     this->fp32                     = parser.has("--fp32");
+//     this->drawContour              = parser.has("--draw-contour");
+//     this->noBbox                   = parser.has("--no-bbox");
+//     this->noLabel                  = parser.has("--no-label");
+//     this->drawMinRect              = parser.has("--draw-minrect");
+//     this->thickness                = parser.get("--line-thickness", 3);
+//     this->padding                  = parser.get("--padding", 0);
 
-    LOG("------------------------------------------------\n");
-    LOG(parser.getArgCount() << " argument(s) passed\n");
-    LOG(parser.getArg());
-    LOG("------------------------------------------------\n");
-#endif // CV_PARSER
-}
+//     LOG("------------------------------------------------\n");
+//     LOG(parser.getArgCount() << " argument(s) passed\n");
+//     LOG(parser.getArg());
+//     LOG("------------------------------------------------\n");
+// #endif // CV_PARSER
+// }
 
 int Utils::load(const std::string& model) {
     std::filesystem::path bin = model + ".bin";
@@ -242,7 +222,7 @@ int Utils::load(const std::string& model) {
 }
 
 int Utils::load(const std::filesystem::path& bin, const std::filesystem::path& param) {
-    return detector.load(bin.string().c_str(), param.string().c_str());
+    return detector->load(bin.string().c_str(), param.string().c_str());
 }
 
 void Utils::draw_objects(cv::Mat& bgr, const std::vector<Object>& objects, int colorMode) {
@@ -381,9 +361,9 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     cv::Mat in = cv::imread(inputPath.string());
     std::vector<Object> objects;
     if (dynamic)
-        detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
+        detector->detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
     else
-        detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
+        detector->detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
     std::string fileName = inputPath.filename().string();
     std::string stem = inputPath.stem().string();
@@ -547,9 +527,9 @@ void Utils::video(std::string inputPath) {
         do {
             capture >> frame; //extract frame by frame
             if (dynamic)
-                detector.detect_dynamic(frame, objects, target_size, prob_threshold, agnostic, max_object);
+                detector->detect_dynamic(frame, objects, target_size, prob_threshold, agnostic, max_object);
             else
-                detector.detect(frame, objects, target_size, prob_threshold, agnostic, max_object);
+                detector->detect(frame, objects, target_size, prob_threshold, agnostic, max_object);
             draw_objects(frame, objects, 0);
             cv::imshow("Detect", frame);
             if (save) {
