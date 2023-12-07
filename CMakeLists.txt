@@ -27,6 +27,7 @@ if(WARNING)
 endif()
 
 add_subdirectory(yaml-cpp)
+add_subdirectory(spdlog)
 add_subdirectory(Yolo)
 add_subdirectory(Yolov5-seg)
 add_subdirectory(imutils-cpp)
