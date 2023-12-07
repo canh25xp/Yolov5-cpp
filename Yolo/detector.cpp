@@ -1,5 +1,6 @@
-#include "yolo.hpp"
+#include "detector.hpp"
 #include "layers.hpp"
+#include "object.hpp"
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -9,20 +10,21 @@
 #define PERMUTE     0 // Using the permute layer output. Otherwise, use convolution layer
 #define FAST_EXP    1 // Using fast exponential function
 
-Yolo::Yolo(){
+namespace Yolo {
+Detector::Detector() {
 }
 
-Yolo::~Yolo() {
+Detector::~Detector() {
     net.clear();
 }
 
-void Yolo::use_fp32() {
+void Detector::use_fp32() {
     net.opt.use_fp16_packed = false;
     net.opt.use_fp16_storage = false;
     net.opt.use_fp16_arithmetic = false;
 }
 
-int Yolo::load(const char* bin, const char* param) {
+int Detector::load(const char* bin, const char* param) {
     if (net.load_param(param)) {
         return -1;
     }
@@ -32,16 +34,16 @@ int Yolo::load(const char* bin, const char* param) {
     return 0;
 }
 
-void Yolo::get_blob_name(const char* in, const char* out, const char* out1, const char* out2, const char* out3, const char* seg) {
-    in_blob   = in;
-    out_blob  = out;
+void Detector::get_blob_name(const char* in, const char* out, const char* out1, const char* out2, const char* out3, const char* seg) {
+    in_blob = in;
+    out_blob = out;
     out1_blob = out1;
     out2_blob = out2;
     out3_blob = out3;
-    seg_blob  = seg;
+    seg_blob = seg;
 }
 
-int Yolo::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
+int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
     TIME_LOG("Inference");
     // load image
     const int img_w = bgr.cols;
@@ -55,7 +57,8 @@ int Yolo::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_si
         scale = (float) target_size / w;
         w = target_size;
         h = h * scale;
-    } else {
+    }
+    else {
         scale = (float) target_size / h;
         h = target_size;
         w = w * scale;
@@ -204,7 +207,7 @@ int Yolo::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_si
     return 0;
 }
 
-int Yolo::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
+int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
     TIME_LOG("Inference");
     // load image
     const int img_w = bgr.cols;
@@ -218,7 +221,8 @@ int Yolo::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int t
         scale = (float) target_size / w;
         w = target_size;
         h = h * scale;
-    } else {
+    }
+    else {
         scale = (float) target_size / h;
         h = target_size;
         w = w * scale;
@@ -457,7 +461,7 @@ int Yolo::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int t
     return 0;
 }
 
-void Yolo::decode_mask(const ncnn::Mat& mask_feat, const int& img_w, const int& img_h,
+void Detector::decode_mask(const ncnn::Mat& mask_feat, const int& img_w, const int& img_h,
                        const ncnn::Mat& mask_proto, const ncnn::Mat& in_pad, const int& wpad, const int& hpad,
                        ncnn::Mat& mask_pred_result) {
     ncnn::Mat masks;
@@ -474,12 +478,12 @@ void Yolo::decode_mask(const ncnn::Mat& mask_feat, const int& img_w, const int& 
 #endif
 }
 
-inline float Yolo::intersection_area(const Object& a, const Object& b) {
+inline float Detector::intersection_area(const Object& a, const Object& b) {
     cv::Rect_<float> inter = a.rect & b.rect;
     return inter.area();
 }
 
-void Yolo::qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int right) {
+void Detector::qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int right) {
     int i = left;
     int j = right;
     float p = faceobjects[(left + right) / 2].prob;
@@ -513,14 +517,14 @@ void Yolo::qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int
     }
 }
 
-void Yolo::qsort_descent_inplace(std::vector<Object>& faceobjects) {
+void Detector::qsort_descent_inplace(std::vector<Object>& faceobjects) {
     if (faceobjects.empty())
         return;
 
     qsort_descent_inplace(faceobjects, 0, faceobjects.size() - 1);
 }
 
-void Yolo::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic) {
+void Detector::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic) {
     picked.clear();
 
     const int n = faceobjects.size();
@@ -563,30 +567,31 @@ inline float fast_exp(float x) {
     return v.f;
 }
 
-inline float Yolo::sigmoid(float x) {
+inline float Detector::sigmoid(float x) {
     return 1.0f / (1.0f + fast_exp(-x));
 }
 #else
-inline float Yolo::sigmoid(float x) {
+inline float Detector::sigmoid(float x) {
     return static_cast<float>(1.f / (1.f + exp(-x)));
 }
 #endif // FAST_EXP
 
-inline float Yolo::relu(float x) {
+inline float Detector::relu(float x) {
     if (x > 0)
         return x;
     else
         return 0;
 }
 
-void Yolo::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
+void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
     const int num_grid = feat_blob.h;
     int num_grid_x;
     int num_grid_y;
     if (in_pad.w > in_pad.h) {
         num_grid_x = in_pad.w / stride;
         num_grid_y = num_grid / num_grid_x;
-    } else {
+    }
+    else {
         num_grid_y = in_pad.h / stride;
         num_grid_x = num_grid / num_grid_y;
     }
@@ -655,7 +660,7 @@ void Yolo::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::
     }
 }
 
-void Yolo::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
+void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
     const int num_grid_x = feat_blob.w;
     const int num_grid_y = feat_blob.h;
 
@@ -726,7 +731,7 @@ void Yolo::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::
     }
 }
 
-void Yolo::mat_print(const ncnn::Mat & mat) {
+void Detector::mat_print(const ncnn::Mat& mat) {
     for (int q = 0; q < mat.c; q++) {
         const float* ptr = mat.channel(q);
         for (int z = 0; z < mat.d; z++) {
@@ -743,7 +748,7 @@ void Yolo::mat_print(const ncnn::Mat & mat) {
     }
 }
 
-void Yolo::mat_visualize(const char* title, const ncnn::Mat & mat, bool save) {
+void Detector::mat_visualize(const char* title, const ncnn::Mat& mat, bool save) {
     std::vector<cv::Mat> normed_feats(mat.c);
 
     for (int i = 0; i < mat.c; i++) {
@@ -794,7 +799,7 @@ void Yolo::mat_visualize(const char* title, const ncnn::Mat & mat, bool save) {
     }
 }
 
-cv::Mat Yolo::ncnn2cv(const ncnn::Mat& mat, int c) {
+cv::Mat Detector::ncnn2cv(const ncnn::Mat& mat, int c) {
     std::vector<cv::Mat> normed_feats(mat.c);
     for (int i = 0; i < mat.c; i++) {
         cv::Mat tmp(mat.h, mat.w, CV_32FC1, (void*) (const float*) mat.channel(i));
@@ -819,4 +824,5 @@ cv::Mat Yolo::ncnn2cv(const ncnn::Mat& mat, int c) {
         }
     }
     return normed_feats[c];
+}
 }

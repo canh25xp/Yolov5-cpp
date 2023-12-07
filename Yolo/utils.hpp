@@ -1,6 +1,5 @@
 #pragma once
-#include "yolo.hpp"
-
+#include "detector.hpp"
 #include <filesystem>
 
 #ifdef CV_PARSER
@@ -24,6 +23,7 @@ extern const unsigned char colors[81][3];
 extern std::vector<std::string> IMG_FORMATS;
 extern std::vector<std::string> VID_FORMATS;
 
+namespace Yolo {
 class Utils {
 public:
     Utils();
@@ -83,7 +83,7 @@ public:
     void set_arguments(int argc, char** argv);
 
 private:
-    Yolo yolo;
+    Detector detector;
     std::vector<std::string> class_names;
 
 private:
@@ -119,3 +119,4 @@ private:
 
     bool isVideo(const std::filesystem::path& path);
 };
+}

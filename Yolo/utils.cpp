@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "object.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -97,27 +98,28 @@ const unsigned char colors[81][3] = {
 std::vector<std::string> IMG_FORMATS {"bmp", "dng", "jpg", "jpeg", "mpo", "png", "tif", "tiff", "webp", "pfm"};
 std::vector<std::string> VID_FORMATS {"asf", "avi", "gif", "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "ts", "wmv"};
 
+namespace Yolo {
 Utils::Utils() {
-    this->model             = "models/yolov5s-seg.ncnn";
-    this->data              = "data/coco128.txt";
-    this->input             = "input/test.jpg";
-    this->project           = "runs/idcard";
-    this->name              = "exp";
-    this->save              = false;
-    this->drawContour       = false;
-    this->crop              = false;
-    this->save_txt          = false;
-    this->save_mask         = false;
-    this->rotate            = false;
-    this->show              = false;
-    this->dynamic           = false;
-    this->agnostic          = false;
-    this->noBbox            = false;
-    this->noLabel           = false;
-    this->target_size       = 640;
-    this->prob_threshold    = 0.25f;
-    this->nms_threshold     = 0.45f;
-    this->max_object        = 100;
+    this->model = "models/yolov5s-seg.ncnn";
+    this->data = "data/coco128.txt";
+    this->input = "input/test.jpg";
+    this->project = "runs/idcard";
+    this->name = "exp";
+    this->save = false;
+    this->drawContour = false;
+    this->crop = false;
+    this->save_txt = false;
+    this->save_mask = false;
+    this->rotate = false;
+    this->show = false;
+    this->dynamic = false;
+    this->agnostic = false;
+    this->noBbox = false;
+    this->noLabel = false;
+    this->target_size = 640;
+    this->prob_threshold = 0.25f;
+    this->nms_threshold = 0.45f;
+    this->max_object = 100;
 }
 
 Utils::Utils(int argc, char** argv) {
@@ -129,8 +131,8 @@ Utils::~Utils() {
 
 int Utils::run() {
     if (this->fp32)
-        yolo.use_fp32();
-        
+        detector.use_fp32();
+
     if (load(this->model))
         return -1;
 
@@ -138,7 +140,7 @@ int Utils::run() {
 
     get_class_names(dataPath);
 
-    std::filesystem::path outputPath = project + "/" +name;
+    std::filesystem::path outputPath = project + "/" + name;
     std::filesystem::path inputPath = input;
 
     if (not inputPath.has_extension()) {
@@ -192,12 +194,12 @@ void Utils::set_arguments(int argc, char** argv) {
     this->saveMask		           = parser.has("save-mask");
     this->rotate			       = parser.has("rotate");
     this->show                     = parser.has("show");
-    yolo.target_size              = parser.get<int>("size");
-    yolo.prob_threshold           = parser.get<float>("conf");
-    yolo.nms_threshold            = parser.get<float>("nms");
-    yolo.max_object               = parser.get<int>("max-obj");
-    yolo.dynamic                  = parser.has("dynamic");
-    yolo.agnostic                 = parser.has("agnostic");
+    detector.target_size              = parser.get<int>("size");
+    detector.prob_threshold           = parser.get<float>("conf");
+    detector.nms_threshold            = parser.get<float>("nms");
+    detector.max_object               = parser.get<int>("max-obj");
+    detector.dynamic                  = parser.has("dynamic");
+    detector.agnostic                 = parser.has("agnostic");
 #else
     Parser parser (argc, argv);
     this->model                    = parser.get("--model", "weights/yolov5s-seg-idcard-best-2.ncnn");
@@ -233,14 +235,14 @@ void Utils::set_arguments(int argc, char** argv) {
 }
 
 int Utils::load(const std::string& model) {
-    std::filesystem::path bin        = model + ".bin";
-    std::filesystem::path param      = model + ".param";
+    std::filesystem::path bin = model + ".bin";
+    std::filesystem::path param = model + ".param";
     load(bin, param);
     return 0;
 }
 
 int Utils::load(const std::filesystem::path& bin, const std::filesystem::path& param) {
-    return yolo.load(bin.string().c_str(), param.string().c_str());
+    return detector.load(bin.string().c_str(), param.string().c_str());
 }
 
 void Utils::draw_objects(cv::Mat& bgr, const std::vector<Object>& objects, int colorMode) {
@@ -330,7 +332,8 @@ std::vector<cv::Point> Utils::mask2segment(const cv::Mat& mask, int strategy) {
         for (std::vector<cv::Point> concatenatedPoints : contours) {
             contour.insert(contour.end(), concatenatedPoints.begin(), concatenatedPoints.end());
         }
-    } else {
+    }
+    else {
         contour = *std::max_element(contours.begin(), contours.end(),
                                     [] (const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
                                         return a.size() < b.size();
@@ -360,7 +363,7 @@ void Utils::draw_mask(cv::Mat& bgr, const cv::Mat& mask, const unsigned char* co
 void Utils::draw_RotatedRect(cv::Mat& bgr, const cv::RotatedRect& rr, const cv::Scalar& cc, int thickness) {
     cv::Point2f vertices[4];
 
-    if(padding!=0){
+    if (padding != 0) {
         auto new_h = rr.size.height + padding;
         auto new_w = rr.size.width + padding;
         cv::RotatedRect padding_rect(rr.center, cv::Size2f(new_w, new_h), rr.angle);
@@ -378,9 +381,9 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     cv::Mat in = cv::imread(inputPath.string());
     std::vector<Object> objects;
     if (dynamic)
-        yolo.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
+        detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
     else
-        yolo.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
+        detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
     std::string fileName = inputPath.filename().string();
     std::string stem = inputPath.stem().string();
@@ -417,10 +420,10 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
         if (i != objCount - 1)
             labels.append("\n");
 
-        if(!noBbox)
+        if (!noBbox)
             cv::rectangle(out, obj.rect, cc, thickness);
-        
-        if(!noLabel)
+
+        if (!noLabel)
             draw_label(out, obj.rect, class_names[obj.label] + " " + cv::format("%.2f", obj.prob * 100) + "%");
 
         cv::Mat binMask;
@@ -442,8 +445,8 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
                 rotated = in(obj.rect);
             else {
                 cv::RotatedRect rr = cv::minAreaRect(contour);
-                if(drawMinRect)
-                    draw_RotatedRect(out, rr, cv::Scalar(0,255,0), thickness);
+                if (drawMinRect)
+                    draw_RotatedRect(out, rr, cv::Scalar(0, 255, 0), thickness);
                 rotAngle = getRotatedRectImg(in, rotated, rr);
             }
             cv::utils::fs::createDirectory(rotateFolder);
@@ -529,7 +532,8 @@ void Utils::video(std::string inputPath) {
     cv::VideoCapture capture;
     if (inputPath == "0") {
         capture.open(0);
-    } else {
+    }
+    else {
         capture.open(inputPath);
     }
     if (capture.isOpened()) {
@@ -543,9 +547,9 @@ void Utils::video(std::string inputPath) {
         do {
             capture >> frame; //extract frame by frame
             if (dynamic)
-                yolo.detect_dynamic(frame, objects, target_size, prob_threshold, agnostic, max_object);
+                detector.detect_dynamic(frame, objects, target_size, prob_threshold, agnostic, max_object);
             else
-                yolo.detect(frame, objects, target_size, prob_threshold, agnostic, max_object);
+                detector.detect(frame, objects, target_size, prob_threshold, agnostic, max_object);
             draw_objects(frame, objects, 0);
             cv::imshow("Detect", frame);
             if (save) {
@@ -560,7 +564,8 @@ void Utils::video(std::string inputPath) {
             if (key == 27 || key == 'q' || key == 'Q') // Press q or esc to exit from window
                 break;
         } while (!frame.empty());
-    } else {
+    }
+    else {
         LOG("Could not Open Camera/Video");
     }
 }
@@ -611,13 +616,13 @@ void Utils::get_class_names(const std::string& dataFile) {
     }
 }
 
-void Utils::get_class_names_yaml(const std::string &data_yaml) {
+void Utils::get_class_names_yaml(const std::string& data_yaml) {
     YAML::Node data = YAML::LoadFile(data_yaml);
 
     YAML::Node namesNode = data["names"];
 
-    if (namesNode && namesNode.IsMap()){
-        for(const auto& name : namesNode ){
+    if (namesNode && namesNode.IsMap()) {
+        for (const auto& name : namesNode) {
             class_names.push_back(name.second.as<std::string>());
         }
     }
@@ -625,9 +630,9 @@ void Utils::get_class_names_yaml(const std::string &data_yaml) {
 
 void Utils::get_class_names(const std::filesystem::path& data) {
     std::string ext = data.extension().string().substr(1);
-    if(ext == "yaml")
+    if (ext == "yaml")
         get_class_names_yaml(data.string());
-    else if(ext == "txt")
+    else if (ext == "txt")
         get_class_names(data.string());
     else
         LOG("invalid data file");
@@ -655,4 +660,5 @@ bool Utils::isVideo(const std::filesystem::path& path) {
     std::string ext = path.extension().string().substr(1);
     std::transform(ext.begin(), ext.end(), ext.begin(), [] (unsigned char c) { return std::tolower(c); });
     return std::find(VID_FORMATS.begin(), VID_FORMATS.end(), ext) != VID_FORMATS.end();
+}
 }

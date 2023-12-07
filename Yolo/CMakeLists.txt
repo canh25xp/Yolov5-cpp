@@ -1,4 +1,4 @@
-set(Yolo_Src yolo.cpp utils.cpp layers.cpp parser.cpp timer.cpp)
+set(Yolo_Src utils.cpp layers.cpp parser.cpp timer.cpp detector.cpp)
 
 set(CMAKE_DEBUG_POSTFIX d)
 
