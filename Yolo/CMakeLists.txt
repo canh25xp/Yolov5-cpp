@@ -1,5 +1,7 @@
 set(Yolo_Src yolo.cpp utils.cpp layers.cpp parser.cpp timer.cpp pch.cpp)
 
+set(CMAKE_DEBUG_POSTFIX d)
+
 add_library(Yolo ${Yolo_Src})
 
 target_include_directories(
@@ -10,5 +12,6 @@ target_include_directories(
 
 # MESSAGE(STATUS "Include dirs ${OpenCV_INCLUDE_DIRS}")
 # MESSAGE(STATUS "LINK LIBRARIES ${OpenCV_LIBS}")
+set_target_properties(Yolo PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 
 target_link_libraries(Yolo PUBLIC yaml-cpp ncnn ${OpenCV_LIBS} compiler_flags)
