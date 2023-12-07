@@ -32,4 +32,4 @@ git lfs pull
 build\Yolov5-seg\Release\Yolov5-seg.exe --show --rotate
 ```
 ![output](./runs/idcard/exp/sample.jpg)
-![rotated](./runs\idcard\exp\rotate\sample.jpg)
+![rotated](./runs/idcard/exp/rotate/sample.jpg)
