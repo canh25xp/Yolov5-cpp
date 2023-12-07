@@ -14,4 +14,6 @@ target_include_directories(
 # MESSAGE(STATUS "LINK LIBRARIES ${OpenCV_LIBS}")
 set_target_properties(Yolo PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 
-target_link_libraries(Yolo PUBLIC yaml-cpp ncnn ${OpenCV_LIBS} compiler_flags)
+target_link_libraries(Yolo 
+    PUBLIC ${OpenCV_LIBS} compiler_flags
+    PRIVATE ncnn spdlog yaml-cpp)
