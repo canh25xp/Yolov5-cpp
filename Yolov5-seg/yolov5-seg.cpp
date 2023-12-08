@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
     CLI::App parser {"Yolov5 segmentation NCNN"};
     argv = parser.ensure_utf8(argv);
 
-    parser.add_option("--model", utils.model, "model file path");
+    parser.add_option("--model", utils.model, "model file path")->option_text("model.ncnn");
     parser.add_option("-i,--input,--source", utils.input, "file or folder or 0(webcam)");
     parser.add_option("--data", utils.data, "data file path");
     parser.add_option("--imgsz,--img,--img-size",utils.target_size,"inference size");

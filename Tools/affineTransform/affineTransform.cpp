@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 
 	cv::Mat dst;
 	//affineMatrix = cv::getRotationMatrix2D(cv::Point(src.cols/2, src.rows/2), 30, 0.8);
-	float data[6] = {
+	int data[6] = {
 		-1	,	0	,	src.rows,
 		0	,	1	,	0 };
 	cv::Mat affineMatrix(2, 3, CV_32FC1, data);
