@@ -16,6 +16,7 @@
 #define LOG(message) std::cout << message
 #endif // _DEBUG
 
+// TODO: change doxygen comment style
 namespace Yolo {
 
 struct Object;
@@ -26,10 +27,12 @@ public:
 
     ~Detector();
 
+    
     /// <summary>
     /// Use 32-bit floating point inference, otherwise use 16-bit floating point
     /// </summary>
     void use_fp32();
+    // TODO: is this option really do anything ?
 
     /// <summary>
     /// Load ncnn model
@@ -64,6 +67,7 @@ public:
     /// <param name="max">max objects detection</param>
     /// <returns>0 if success</returns>
     int detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size = 640, float prob_threshold = 0.25f, float nms_threshold = 0.45f, bool agnostic = false, int max = 100);
+    // TODO: some how refactoring these two functions
 
     void get_blob_name(const char* in, const char* out, const char* out1, const char* out2, const char* out3, const char* seg);
 
@@ -100,6 +104,7 @@ private:
 
     // For using convolution output layer
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
+    // TODO: some how refactoring these two functions
 
     /// <summary>
     /// Apply non max suppression

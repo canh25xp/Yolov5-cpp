@@ -6,6 +6,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// TODO: Config logger for Yolo
+
 #include <spdlog/spdlog.h>
 
 #define MAX_STRIDE  64
