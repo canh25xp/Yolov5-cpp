@@ -1,9 +1,9 @@
 [submodule "imutils-cpp"]
-	path = imutils-cpp
+	path = ThirdParty/imutils-cpp
 	url = https://github.com/canh25xp/imutils-cpp
 [submodule "yaml-cpp"]
-	path = yaml-cpp
+	path = ThirdParty/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
 [submodule "spdlog"]
-	path = spdlog
+	path = ThirdParty/spdlog
 	url = https://github.com/gabime/spdlog.git
