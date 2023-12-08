@@ -1,34 +1,37 @@
 #include "yolo.hpp"
-#include "parser.hpp"
+#include "CLI/CLI.hpp"
 
 int main(int argc, char** argv) {
     Yolo::Utils utils;
+    CLI::App parser {"Yolov5 segmentation NCNN"};
+    argv = parser.ensure_utf8(argv);
 
-    Parser parser(argc, argv);
-    utils.model                    = parser.get("--model", "weights/yolov5s-seg-idcard-best-2.ncnn");
-    utils.data                     = parser.get("--data", "data/idcard.yaml");
-    utils.input                    = parser.get("--source", "data/images/sample.jpg");
-    utils.project                  = parser.get("--project", "runs/idcard");
-    utils.name                     = parser.get("--name", "exp");
-    utils.crop                     = parser.has("--crop");
-    utils.save                     = parser.has("--save");
-    utils.save_txt                 = parser.has("--save-txt");
-    utils.save_mask		           = parser.has("--save-mask");
-    utils.rotate		           = parser.has("--rotate");
-    utils.show                     = parser.has("--show");
-    utils.dynamic                  = parser.has("--dynamic");
-    utils.agnostic                 = parser.has("--agnostic");
-    utils.target_size              = parser.get("--size", 640);
-    utils.prob_threshold           = parser.get("--conf", 0.25f);
-    utils.nms_threshold            = parser.get("--nms", 0.45f);
-    utils.max_object               = parser.get("--max-obj", 1);
-    utils.fp32                     = parser.has("--fp32");
-    utils.drawContour              = parser.has("--draw-contour");
-    utils.noBbox                   = parser.has("--no-bbox");
-    utils.noLabel                  = parser.has("--no-label");
-    utils.drawMinRect              = parser.has("--draw-minrect");
-    utils.thickness                = parser.get("--line-thickness", 3);
-    utils.padding                  = parser.get("--padding", 0);
+    parser.add_option("--model", utils.model, "model file path");
+    parser.add_option("-i,--input,--source", utils.input, "file or folder or 0(webcam)");
+    parser.add_option("--data", utils.data, "data file path");
+    parser.add_option("--imgsz,--img,--img-size",utils.target_size,"inference size");
+    parser.add_option("--conf,--conf-thres",utils.prob_threshold,"confidence threshold");
+    parser.add_option("--nms,--iou-thres",utils.nms_threshold,"NMS IoU threshold");
+    parser.add_option("--max-obj,--max-det",utils.max_object,"maximum detections per image");
+    parser.add_option("--project", utils.project, "save results to project/name");
+    parser.add_option("--name", utils.name, "save results to project/name");
+    parser.add_option("--line-thickness",utils.thickness,"line thickness for draw (pixels)");
+    parser.add_option("--padding",utils.padding,"add padding to min area rect");
+    parser.add_flag("--crop", utils.crop, "crop detection");
+    parser.add_flag("--save",utils.save,"save results");
+    parser.add_flag("--save-txt",utils.save_txt,"save labels");
+    parser.add_flag("--save-mask",utils.save_mask,"save mask");
+    parser.add_flag("--rotate",utils.rotate,"rotate the detected min area rect");
+    parser.add_flag("--show,--view-img",utils.show,"show result");
+    parser.add_flag("--dynamic",utils.dynamic,"using dynamic inference");
+    parser.add_flag("--agnostic-nms",utils.agnostic,"class-agnostic NMS");
+    parser.add_flag("--fp32",utils.fp32,"using 32-bit floating point inference");
+    parser.add_flag("--draw-contour",utils.drawContour,"draw contour instead of mask");
+    parser.add_flag("--no-bbox",utils.noBbox,"no draw bounding box");
+    parser.add_flag("--no-label,--hide-labels",utils.noLabel,"no draw label");
+    parser.add_flag("--draw-minrect",utils.drawMinRect,"draw min area rect");
+
+    CLI11_PARSE(parser, argc, argv);
     utils.run();
 
     return 0;

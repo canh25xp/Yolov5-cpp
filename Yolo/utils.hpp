@@ -49,11 +49,11 @@ public:
     int padding = 0;
     int thickness = 3;
 
-    std::string project;
-    std::string name;
-    std::string input;
-    std::string model;
-    std::string data;
+    std::string project = "runs/idcard";
+    std::string name = "exp";
+    std::string input = "data/images/sample.jpg";
+    std::string model = "weights/yolov5s-seg-idcard-best-2.ncnn";
+    std::string data = "data/idcard.yaml";
 
 public:
     int run();
