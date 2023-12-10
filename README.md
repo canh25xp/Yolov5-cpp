@@ -7,17 +7,22 @@ git clone https://github.com/canh25xp/yolov5-cpp
 cd yolov5-cpp
 git submodule update --init
 ```
-### 2. Build with cmake 
+### 2. Config 
 The dependencies is manage with [vcpkg](https://github.com/microsoft/vcpkg).
 Therefore, you have to have it installed and put the VCPKG_ROOT in the environment variable.
 ```
 cmake --preset vcpkg
-cmake --build build --config Release
 ```
 Alternatively :
 ```
-mkdir build
 cmake -B build -S . --toolchain=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
+```
+Or :
+```
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
+```
+### 3. Build
+```
 cmake --build build --config Release
 ```
 ### 3. Pull model files
