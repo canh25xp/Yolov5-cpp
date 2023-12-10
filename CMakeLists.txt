@@ -11,10 +11,6 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # set(Opencv_Dir "D:/Lib/opencv/build/install/x64/vc17")
 find_package(OpenCV REQUIRED)
 
-# Add(uncomment) the following line if you haven't add ncnn_dir to your system enviroment
-# set(ncnn_DIR "D:/Lib/ncnn/build/install/lib/cmake/ncnn" CACHE PATH "Directory that contains ncnnConfig.cmake")
-find_package(ncnn REQUIRED)
-
 add_library(compiler_flags INTERFACE)
 target_compile_features(compiler_flags INTERFACE cxx_std_20)
 
