@@ -5,7 +5,7 @@ project(Yolov5-cpp VERSION 0.1.0 LANGUAGES C CXX)
 option(BUILD_TOOLS "well, to build tools" ON)
 option(WARNING "Turn on all warning" OFF)
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<${msvc-shared_rt}:DLL>")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # Add(uncomment) the following line if you haven't add opencv_dir to your system enviroment
 # set(Opencv_Dir "D:/Lib/opencv/build/install/x64/vc17")
