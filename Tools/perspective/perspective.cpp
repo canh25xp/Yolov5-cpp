@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
     while (1) {
         char c = waitKey();
         if (c == 's' && ROI.data) {
-            sprintf_s(imgName, "%d.jpg", i++);
+            sprintf(imgName, "%d.jpg", i++);
             imwrite(imgName, ROI);
             cout << "  Saved " << imgName << endl;
         }
