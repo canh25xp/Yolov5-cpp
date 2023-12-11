@@ -10,7 +10,7 @@ option(WARNING "Turn on all warning" OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # Add(uncomment) the following line if you haven't add opencv_dir to your system enviroment
-# set(OpenCV_Dir "D:/Lib/opencv/build/install/x64/vc17")
+# set(OpenCV_DIR "/usr/lib/x86_64-linux-gnu/cmake/opencv4")
 find_package(OpenCV REQUIRED)
 
 add_library(compiler_flags INTERFACE)
