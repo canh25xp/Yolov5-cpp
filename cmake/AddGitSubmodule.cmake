@@ -10,7 +10,7 @@ function(add_submodule dir)
                 RESULT_VARIABLE GIT_SUBMODULE_RESULT
             )
             if(NOT GIT_SUBMODULE_RESULT EQUAL "0")
-                message(FATAL_ERROR "AddGitSubmodule go bruh")
+                message(FATAL_ERROR "add_submodule ${dir} go bruh")
             endif()
         else()
             message(STATUS "${dir} already initialized")
