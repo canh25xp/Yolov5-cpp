@@ -13,3 +13,7 @@ build/
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+docs/*
+!docs/*.pdf
+!docs/*.tex
