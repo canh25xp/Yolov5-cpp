@@ -19,8 +19,8 @@ function(add_submodule dir)
     add_subdirectory(${dir})
 endfunction()
 
-function(deinit_submodule)
-    if(GIT_FOUND AND EXISTS ${PROJECT_SOURCE_DIR}/.git)
+function(deinit_submodule dir)
+    if(GIT_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/${dir}/.git)
         execute_process(
             COMMAND ${GIT_EXECUTABLE} submodule deinit -- ${dir}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
