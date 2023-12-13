@@ -5,6 +5,7 @@
 #include <vector>
 #include <filesystem>
 #include <fstream>
+#include <chrono>
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/utils/filesystem.hpp>
@@ -415,7 +416,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
 void Utils::folder(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
     LOG("Auto running on all images in the input folder");
     int count = 0;
-    clock_t tStart = clock();
+    auto tStart = std::chrono::high_resolution_clock::now();
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(inputPath)) {
         std::string path = entry.path().string();
         LOG("\n------------------------------------------------" << std::endl);
@@ -428,12 +429,12 @@ void Utils::folder(const std::filesystem::path& inputPath, const std::filesystem
             LOG("skipping non image file");
         }
     }
-    auto total = (double) (clock() - tStart) / CLOCKS_PER_SEC;
+    auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
     double average = total / count;
     LOG("\n------------------------------------------------" << std::endl);
     LOG(count << " images processed" << std::endl);
-    LOG("Total time taken: " << total << " seconds" << std::endl);
-    LOG("Average time taken: " << average << " seconds" << std::endl);
+    LOG("Total time taken: " << total << " ms" << std::endl);
+    LOG("Average time taken: " << average << " ms" << std::endl);
 }
 
 void Utils::video(std::string inputPath) {
