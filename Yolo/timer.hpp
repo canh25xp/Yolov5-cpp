@@ -3,8 +3,8 @@
 #include <string>
 
 struct Timer {
-    std::chrono::time_point<std::chrono::steady_clock> start{}, finish{};
-    std::chrono::duration<float> duration{}; //duration in seconds
+    std::chrono::time_point<std::chrono::high_resolution_clock> start{}, finish{};
+    std::chrono::duration<double, std::milli> duration{}; //duration in milliseconds
     std::string task;
     Timer(const char* _task);
     ~Timer();
