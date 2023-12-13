@@ -14,3 +14,6 @@
 	path = ThirdParty/CLI11
 	url = https://github.com/CLIUtils/CLI11
 	shallow = true
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg
