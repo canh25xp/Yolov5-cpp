@@ -1,5 +1,6 @@
 #include <ncnn/net.h>
 
+namespace Yolo{
 void Matmul(const std::vector<ncnn::Mat>& bottom_blobs, ncnn::Mat& top_blob) {
     ncnn::Option opt;
     opt.num_threads = 2;
@@ -130,3 +131,4 @@ void Sigmoid(ncnn::Mat& bottom) {
 
     delete op;
 }
+} // namespace Yolo
