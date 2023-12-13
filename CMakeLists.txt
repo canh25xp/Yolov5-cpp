@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW) # enable MSVC_RUNTIME_LIBRARY target property
 
-include(cmake/AddGitSubmodule.cmake) # To use add_submodule() function
+include(cmake/AddGitSubmodule.cmake) # To use add_submodule() and deinit_submodule() function
 
 # IF not find vcpkg install locally, add vcpkg as submodule and set vcpkg toolchain file
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
