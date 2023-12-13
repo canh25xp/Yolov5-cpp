@@ -49,7 +49,7 @@ int main() {
         // Reset everything for the next frame.
         image = Mat(400, 400, CV_8UC3, Scalar(0));
         vertVect.clear();
-        angle += 10;
+        angle += 1;
     }
 
     return 0;
