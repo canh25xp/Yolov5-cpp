@@ -1,8 +1,13 @@
-set(Yolo_Src utils.cpp layers.cpp parser.cpp timer.cpp detector.cpp)
+add_library(Yolo)
+# set(YOLO_SRC utils.cpp layers.cpp parser.cpp timer.cpp detector.cpp)
+file(GLOB YOLO_SRC *.cpp)
+
+target_sources(Yolo
+    PRIVATE ${YOLO_SRC})
+
+message(STATUS "YOLO_SRC ${YOLO_SRC}")    
 
 set(CMAKE_DEBUG_POSTFIX d)
-
-add_library(Yolo ${Yolo_Src})
 
 target_include_directories(
     Yolo
