@@ -19,14 +19,14 @@ int main() {
 
     while (waitKey(0) != 27) {
         // Create a rectangle, rotating it by 10 degrees more each time.
-        originalRect = RotatedRect(Point2f(100, 100), Size2f(100, 50), angle);
+        originalRect = RotatedRect(Point2f(150, 150), Size2f(200, 100), angle);
 
         // Convert the rectangle to a vector of points for minAreaRect to use.
         // Also move the points to the right, so that the two rectangles aren't
         // in the same place.
         originalRect.points(vertices);
         for (int i = 0; i < 4; i++) {
-            vertVect.push_back(vertices[i] + Point2f(200, 0));
+            vertVect.push_back(vertices[i]);
         }
 
         // Get minAreaRect to find a rectangle that encloses the points. This
@@ -35,21 +35,25 @@ int main() {
 
         // Draw the original rectangle, and the one given by minAreaRect.
         for (int i = 0; i < 4; i++) {
-            line(image, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0));
-            line(image, vertVect[i], vertVect[(i + 1) % 4], Scalar(255, 0, 0));
+            // line(image, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0));
+            line(image, vertVect[i], vertVect[(i + 1) % 4], Scalar(0, 0, 255));
+        }
+        float newangle = calculatedRect.angle;
+        if (calculatedRect.size.width < calculatedRect.size.height) {
+            newangle = calculatedRect.angle - 90;
         }
         imshow("rectangles", image);
 
-        // Print the angle values.
-        printf("---\n");
-        printf("Original angle:             %7.2f\n", angle);
+        system("cls");
         printf("Angle given by minAreaRect: %7.2f\n", calculatedRect.angle);
-        printf("---\n");
+        printf("New angle:                  %7.2f\n", newangle);
+        printf("w = %d \n", (int)round(calculatedRect.size.width));
+        printf("h = %d \n", (int)round(calculatedRect.size.height));
 
         // Reset everything for the next frame.
         image = Mat(400, 400, CV_8UC3, Scalar(0));
         vertVect.clear();
-        angle += 1;
+        angle += 10;
     }
 
     return 0;
