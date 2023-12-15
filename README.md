@@ -9,7 +9,8 @@ cd yolov5-cpp
 The cmake script will automatically init the submodule so you dont have to `git submodule update --init` anymore
 ### 2. Config 
 The dependencies is manage with [vcpkg](https://github.com/microsoft/vcpkg).
-Therefore, you have to have it installed and put the VCPKG_ROOT in the environment variable.
+Have it installed and put the VCPKG_ROOT in the environment variable.
+Otherwise cmake will attempt to clone vcpkg
 ```bash
 cmake -B build -S . --toolchain=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
 # Alternatively :
