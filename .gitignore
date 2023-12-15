@@ -17,3 +17,5 @@ build/
 docs/*
 !docs/*.pdf
 !docs/*.tex
+
+vcpkg
