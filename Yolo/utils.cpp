@@ -358,6 +358,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
                     draw_RotatedRect(out, rr, cv::Scalar(0, 255, 0), thickness);
                 rotAngle = getRotatedRectImg(in, rotated, rr);
             }
+            // BUG: rotate folder create before output folder
             cv::utils::fs::createDirectory(rotateFolder);
             std::string rotatePath = rotateFolder + "/" + saveFileName;
             if (show)
