@@ -17,5 +17,6 @@ build/
 docs/*
 !docs/*.pdf
 !docs/*.tex
+!docs/*.drawio
 
 vcpkg
