@@ -294,6 +294,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     else
         detector->detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
+    // TODO: only using std::filesystem::path to resolve path 
     std::string fileName = inputPath.filename().string();
     std::string stem = inputPath.stem().string();
     std::string outputPath = outputFolder.string() + "/" + fileName;
