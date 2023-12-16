@@ -667,6 +667,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
                         obj.label = class_index;
                         obj.prob = score;
 #if PERMUTE
+                        obj.mask_feat.resize(32);
                         std::copy(feat_blob.channel(q).row(i * feat_offset + j) + 5 + num_class, feat_blob.channel(q).row(i * feat_offset + j) + 5 + num_class + 32, obj.mask_feat.begin());
 #else
                         for (int c = 0; c < 32; c++)
