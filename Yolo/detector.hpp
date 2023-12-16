@@ -98,13 +98,8 @@ private:
     float sigmoid(float x);
 
     float relu(float x);
-
-    // For using permute output layer
+    
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
-
-    // For using convolution output layer
-    void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
-    // TODO: some how refactoring these two functions
 
     /// <summary>
     /// Apply non max suppression
