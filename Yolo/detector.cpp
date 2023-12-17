@@ -121,6 +121,11 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
         const float* featptr = out.row(i);
         const float box_score = featptr[4];
 
+        float box_confidence = sigmoid(box_score);
+
+        if (box_confidence < prob_threshold)
+            continue;
+        
         // find class index with max class score
         int class_index = 0;
         float class_score = -FLT_MAX;
