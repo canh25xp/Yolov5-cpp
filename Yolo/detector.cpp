@@ -118,13 +118,14 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
     const int num_grid = out.h;
     const int num_class = out.w - 5 - 32;
     for (int i = 0; i < num_grid; i++) {
-        const float box_score = out.row(i)[4];
+        const float* featptr = out.row(i);
+        const float box_score = featptr[4];
 
         // find class index with max class score
         int class_index = 0;
         float class_score = -FLT_MAX;
         for (int k = 0; k < num_class; k++) {
-            float score = out.row(i)[5 + k];
+            float score = featptr[5 + k];
             if (score > class_score) {
                 class_index = k;
                 class_score = score;
@@ -136,10 +137,10 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
 
         // filter candidate boxes with combined score >= prob_threshold
         if (score >= prob_threshold) {
-            const float cx = out.row(i)[0]; //center x coordinate
-            const float cy = out.row(i)[1]; //center y coordinate
-            const float bw = out.row(i)[2]; //box width
-            const float bh = out.row(i)[3]; //box height
+            const float cx = featptr[0]; //center x coordinate
+            const float cy = featptr[1]; //center y coordinate
+            const float bw = featptr[2]; //box width
+            const float bh = featptr[3]; //box height
 
             // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
             float x0 = cx - bw * 0.5f;
@@ -156,7 +157,7 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
             obj.label = class_index;
             obj.prob = score;
             obj.mask_feat.resize(32);
-            std::copy(out.row(i) + 5 + num_class, out.row(i) + 5 + num_class + 32, obj.mask_feat.begin());
+            std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
 
             proposals.push_back(obj);
         }
@@ -589,7 +590,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
     const int num_class = feat_blob.w - 5 - 32;
 
     const int feat_offset = num_grid_x;
-#else    
+#else
     const int num_grid_x = feat_blob.w;
     const int num_grid_y = feat_blob.h;
 
@@ -606,7 +607,8 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
         for (int i = 0; i < num_grid_y; i++) {
             for (int j = 0; j < num_grid_x; j++) {
 #if PERMUTE
-                float box_score = feat_blob.channel(q).row(i * feat_offset + j)[4];
+                const float* featptr = feat_blob.channel(q).row(i * feat_offset + j);
+                float box_score = featptr[4];
 #else
                 float box_score = feat_blob.channel(q * feat_offset + 4).row(i)[j];
 #endif
@@ -617,7 +619,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
                     float class_score = -FLT_MAX;
                     for (int k = 0; k < num_class; k++) {
 #if PERMUTE
-                        float score = feat_blob.channel(q).row(i * feat_offset + j)[5 + k];
+                        float score = featptr[5 + k];
 #else             
                         float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
 #endif
@@ -637,10 +639,10 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
                         // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
                         // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
 #if PERMUTE
-                        float dx = sigmoid(feat_blob.channel(q).row(i * feat_offset + j)[0]);
-                        float dy = sigmoid(feat_blob.channel(q).row(i * feat_offset + j)[1]);
-                        float dw = sigmoid(feat_blob.channel(q).row(i * feat_offset + j)[2]);
-                        float dh = sigmoid(feat_blob.channel(q).row(i * feat_offset + j)[3]);    
+                        float dx = sigmoid(featptr[0]);
+                        float dy = sigmoid(featptr[1]);
+                        float dw = sigmoid(featptr[2]);
+                        float dh = sigmoid(featptr[3]);
 #else
                         float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
                         float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
@@ -668,7 +670,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
                         obj.prob = score;
 #if PERMUTE
                         obj.mask_feat.resize(32);
-                        std::copy(feat_blob.channel(q).row(i * feat_offset + j) + 5 + num_class, feat_blob.channel(q).row(i * feat_offset + j) + 5 + num_class + 32, obj.mask_feat.begin());
+                        std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
 #else
                         for (int c = 0; c < 32; c++)
                             obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
