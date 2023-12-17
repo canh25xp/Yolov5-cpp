@@ -122,7 +122,6 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
         const float box_score = featptr[4];
 
         float box_confidence = sigmoid(box_score);
-
         if (box_confidence < prob_threshold)
             continue;
         
@@ -141,31 +140,32 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
         float score = box_score * class_score;
 
         // filter candidate boxes with combined score >= prob_threshold
-        if (score >= prob_threshold) {
-            const float cx = featptr[0]; //center x coordinate
-            const float cy = featptr[1]; //center y coordinate
-            const float bw = featptr[2]; //box width
-            const float bh = featptr[3]; //box height
+        if (score < prob_threshold)
+            continue;
 
-            // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
-            float x0 = cx - bw * 0.5f;
-            float y0 = cy - bh * 0.5f;
-            float x1 = cx + bw * 0.5f;
-            float y1 = cy + bh * 0.5f;
+        const float cx = featptr[0]; //center x coordinate
+        const float cy = featptr[1]; //center y coordinate
+        const float bw = featptr[2]; //box width
+        const float bh = featptr[3]; //box height
 
-            // collect candidates
-            Object obj;
-            obj.rect.x = x0;
-            obj.rect.y = y0;
-            obj.rect.width = x1 - x0;
-            obj.rect.height = y1 - y0;
-            obj.label = class_index;
-            obj.prob = score;
-            obj.mask_feat.resize(32);
-            std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
+        // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
+        float x0 = cx - bw * 0.5f;
+        float y0 = cy - bh * 0.5f;
+        float x1 = cx + bw * 0.5f;
+        float y1 = cy + bh * 0.5f;
 
-            proposals.push_back(obj);
-        }
+        // collect candidates
+        Object obj;
+        obj.rect.x = x0;
+        obj.rect.y = y0;
+        obj.rect.width = x1 - x0;
+        obj.rect.height = y1 - y0;
+        obj.label = class_index;
+        obj.prob = score;
+        obj.mask_feat.resize(32);
+        std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
+
+        proposals.push_back(obj);
     }
 
     // sort all proposals by score from highest to lowest
@@ -623,71 +623,73 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
                 float box_score = feat_blob.channel(q * feat_offset + 4).row(i)[j];
 #endif
                 float box_confidence = sigmoid(box_score);
-                if (box_confidence >= prob_threshold) {
-                    // find class_index with max class_score
-                    int class_index = 0;
-                    float class_score = -FLT_MAX;
-                    for (int k = 0; k < num_class; k++) {
+                if (box_confidence < prob_threshold)
+                    continue;
+                
+                // find class_index with max class_score
+                int class_index = 0;
+                float class_score = -FLT_MAX;
+                for (int k = 0; k < num_class; k++) {
 #if PERMUTE
-                        float score = featptr[5 + k];
+                    float score = featptr[5 + k];
 #else             
-                        float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
+                    float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
 #endif
-                        if (score > class_score) {
-                            class_index = k;
-                            class_score = score;
-                        }
-                    }
-
-                    // combined score = box score * class score
-                    float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
-
-                    // filter candidate boxes with combined score >= prob_threshold
-                    if (score >= prob_threshold) {
-                        // yolov5/models/yolo.py Detect forward
-                        // y = x[i].sigmoid()
-                        // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
-                        // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-#if PERMUTE
-                        float dx = sigmoid(featptr[0]);
-                        float dy = sigmoid(featptr[1]);
-                        float dw = sigmoid(featptr[2]);
-                        float dh = sigmoid(featptr[3]);
-#else
-                        float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
-                        float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
-                        float dw = sigmoid(feat_blob.channel(q * feat_offset + 2).row(i)[j]);
-                        float dh = sigmoid(feat_blob.channel(q * feat_offset + 3).row(i)[j]);
-#endif
-                        float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
-                        float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
-                        float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
-                        float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
-
-                        // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
-                        float x0 = cx - bw * 0.5f;
-                        float y0 = cy - bh * 0.5f;
-                        float x1 = cx + bw * 0.5f;
-                        float y1 = cy + bh * 0.5f;
-
-                        // collect candidates
-                        Object obj;
-                        obj.rect.x = x0;
-                        obj.rect.y = y0;
-                        obj.rect.width = x1 - x0;
-                        obj.rect.height = y1 - y0;
-                        obj.label = class_index;
-                        obj.prob = score;
-#if PERMUTE
-                        obj.mask_feat.resize(32);
-                        std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
-#else
-                        for (int c = 0; c < 32; c++)
-                            obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
-#endif
-                        objects.push_back(obj);
+                    if (score > class_score) {
+                        class_index = k;
+                        class_score = score;
                     }
                 }
+
+                // combined score = box score * class score
+                float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
+
+                // filter candidate boxes with combined score >= prob_threshold
+                if (score < prob_threshold)
+                    continue;
+
+                // yolov5/models/yolo.py Detect forward
+                // y = x[i].sigmoid()
+                // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
+                // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+#if PERMUTE
+                float dx = sigmoid(featptr[0]);
+                float dy = sigmoid(featptr[1]);
+                float dw = sigmoid(featptr[2]);
+                float dh = sigmoid(featptr[3]);
+#else
+                float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
+                float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
+                float dw = sigmoid(feat_blob.channel(q * feat_offset + 2).row(i)[j]);
+                float dh = sigmoid(feat_blob.channel(q * feat_offset + 3).row(i)[j]);
+#endif
+                float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
+                float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
+                float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
+                float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
+
+                // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
+                float x0 = cx - bw * 0.5f;
+                float y0 = cy - bh * 0.5f;
+                float x1 = cx + bw * 0.5f;
+                float y1 = cy + bh * 0.5f;
+
+                // collect candidates
+                Object obj;
+                obj.rect.x = x0;
+                obj.rect.y = y0;
+                obj.rect.width = x1 - x0;
+                obj.rect.height = y1 - y0;
+                obj.label = class_index;
+                obj.prob = score;
+#if PERMUTE
+                obj.mask_feat.resize(32);
+                std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
+#else
+                for (int c = 0; c < 32; c++)
+                    obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
+#endif
+                objects.push_back(obj);
             }
         }
     }
