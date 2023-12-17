@@ -573,7 +573,12 @@ inline float Detector::relu(float x) {
         return 0;
 }
 
-void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
+void Detector::generate_proposals(const ncnn::Mat& anchors,
+                                  int stride,
+                                  const ncnn::Mat& in_pad,
+                                  const ncnn::Mat& feat_blob,
+                                  float prob_threshold,
+                                  std::vector<Object>& objects) {
 #if PERMUTE
     const int num_grid = feat_blob.h;
     int num_grid_x;
