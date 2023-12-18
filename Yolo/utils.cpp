@@ -27,6 +27,7 @@ Utils::~Utils() {
 }
 
 int Utils::run() {
+    Logger::Init();
     if (this->fp32)
         detector->use_fp32();
 
