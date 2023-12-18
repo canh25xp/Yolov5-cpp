@@ -13,7 +13,6 @@
 #include <chrono>
 
 #include <opencv2/core/mat.hpp>
-#include <opencv2/core/utils/filesystem.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -132,7 +131,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
                     draw_RotatedRect(out, rr, cv::Scalar(0, 255, 0), thickness);
                 rotAngle = getRotatedRectImg(in, rotated, rr);
             }
-            cv::utils::fs::createDirectory(rotateFolder);
+            std::filesystem::create_directory(rotateFolder);
             std::string rotatePath = rotateFolder + "/" + saveFileName;
             if (show)
                 cv::imshow("Rotated", rotated);
@@ -146,14 +145,14 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
         }
 
         if (crop) {
-            cv::utils::fs::createDirectory(cropFolder);
+            std::filesystem::create_directory(cropFolder);
             cv::Mat RoI(in, obj.rect); //Region Of Interest
             std::string cropPath = cropFolder + "/" + saveFileName;
             cv::imwrite(cropPath, RoI);
         }
 
         if (save_mask) {
-            cv::utils::fs::createDirectory(maskFolder);
+            std::filesystem::create_directory(maskFolder);
             std::string maskPath = maskFolder + "/" + saveFileName;
             cv::imwrite(maskPath, binMask);
         }
@@ -173,13 +172,13 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     }
 
     if (save) {
-        cv::utils::fs::createDirectory(outputFolder.string());
+        std::filesystem::create_directory(outputFolder.string());
         cv::imwrite(outputPath, out);
         LOG_INFO("\nOutput saved at {}", outputPath);
     }
 
     if (save_txt) {
-        cv::utils::fs::createDirectory(labelsFolder);
+        std::filesystem::create_directory(labelsFolder);
         std::ofstream txtFile(labelsPath);
         txtFile << labels << " " << contours;
         txtFile.close();
@@ -236,7 +235,7 @@ void Utils::video(std::string inputPath) {
             draw_objects(frame, objects, 0, class_names);
             cv::imshow("Detect", frame);
             if (save) {
-                cv::utils::fs::createDirectory("../frame");
+                std::filesystem::create_directory("../frame");
                 std::string saveFileName = "../frame/" + std::to_string(frameIndex) + ".jpg";
                 cv::imwrite(saveFileName, frame);
                 frameIndex++;
