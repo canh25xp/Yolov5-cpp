@@ -20,6 +20,7 @@
 namespace Yolo {
 
 struct Object;
+struct Anchor;
 
 class Detector {
 public:
@@ -102,6 +103,7 @@ private:
     void generate_proposals(const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
+    void generate_proposals(Anchor anchor, float prob_threshold, std::vector<Object>& objects);
 
     /// <summary>
     /// Apply non max suppression

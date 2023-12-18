@@ -1,6 +1,7 @@
 #include "detector.hpp"
 #include "layers.hpp"
 #include "object.hpp"
+#include "anchors.hpp"
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -312,44 +313,14 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
     std::vector<Object> proposals;
 
     // anchor setting from yolov5/models/yolov5s.yaml
+    std::vector<Anchor> anchors {
+        {out1, 8,  {{10,  13}, {16,  30},  {33,  23}}},     // Stride 8
+        {out2, 16, {{30,  61}, {62,  45},  {59,  119}}},    // Stride 16
+        {out3, 32, {{116, 90}, {156, 198}, {373, 326}}},    // Stride 32
+    };
 
-    // stride 8
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 10.f;
-        anchors[1] = 13.f;
-        anchors[2] = 16.f;
-        anchors[3] = 30.f;
-        anchors[4] = 33.f;
-        anchors[5] = 23.f;
-
-        generate_proposals(anchors, 8, out1, prob_threshold, proposals);
-    }
-
-    // stride 16
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 30.f;
-        anchors[1] = 61.f;
-        anchors[2] = 62.f;
-        anchors[3] = 45.f;
-        anchors[4] = 59.f;
-        anchors[5] = 119.f;
-
-        generate_proposals(anchors, 16, out2, prob_threshold, proposals);
-    }
-
-    // stride 32
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 116.f;
-        anchors[1] = 90.f;
-        anchors[2] = 156.f;
-        anchors[3] = 198.f;
-        anchors[4] = 373.f;
-        anchors[5] = 326.f;
-
-        generate_proposals(anchors, 32, out3, prob_threshold, proposals);
+    for (auto anchor : anchors) {
+        generate_proposals(anchor, prob_threshold, proposals);
     }
 
     // sort all proposals by score from highest to lowest
@@ -739,6 +710,17 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
             }
         }
     }
+}
+
+void Detector::generate_proposals(Anchor anchor, float prob_threshold, std::vector<Object>& objects) {
+    ncnn::Mat anchor_boxes(6);
+    anchor_boxes[0] = anchor.size[0].width;
+    anchor_boxes[1] = anchor.size[0].height;
+    anchor_boxes[2] = anchor.size[1].width;
+    anchor_boxes[3] = anchor.size[1].height;
+    anchor_boxes[4] = anchor.size[2].width;
+    anchor_boxes[5] = anchor.size[2].height;
+    generate_proposals(anchor_boxes, anchor.stride, anchor.feature_blob , prob_threshold, objects);
 }
 
 void Detector::mat_print(const ncnn::Mat& mat) {
