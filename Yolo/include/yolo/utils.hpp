@@ -1,7 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <vector>
-#include <opencv2/core.hpp>
+#include <string>
 
 namespace Yolo {
 class Detector;
