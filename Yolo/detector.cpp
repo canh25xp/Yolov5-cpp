@@ -586,16 +586,9 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
                                   std::vector<Object>& objects) {
 #if PERMUTE
     const int num_grid = feat_blob.h;
-    int num_grid_x;
-    int num_grid_y;
-    if (in_pad.w > in_pad.h) {
-        num_grid_x = in_pad.w / stride;
-        num_grid_y = num_grid / num_grid_x;
-    }
-    else {
-        num_grid_y = in_pad.h / stride;
-        num_grid_x = num_grid / num_grid_y;
-    }
+    const int num_grid_x = (in_pad.w > in_pad.h) ? (in_pad.w / stride)     : (num_grid / (in_pad.h / stride));
+    const int num_grid_y = (in_pad.w > in_pad.h) ? (num_grid / num_grid_x) : (in_pad.h / stride);
+
     const int num_anchors = anchors.w / 2;
     const int num_class = feat_blob.w - 5 - 32;
 
