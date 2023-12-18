@@ -35,7 +35,7 @@ int Utils::run() {
 
     std::filesystem::path dataPath = this->data;
 
-    get_class_names(dataPath);
+    get_class_names(class_names, dataPath);
 
     std::filesystem::path outputPath = project + "/" + name;
     std::filesystem::path inputPath = input;
@@ -257,7 +257,7 @@ void Utils::video(std::string inputPath) {
     }
 }
 
-void Utils::get_class_names(const std::string& dataFile) {
+void Utils::get_class_names(std::vector<std::string>& class_names, const std::string& dataFile) {
     std::ifstream file(dataFile);
     std::string name = "";
     while (std::getline(file, name)) {
@@ -265,7 +265,7 @@ void Utils::get_class_names(const std::string& dataFile) {
     }
 }
 
-void Utils::get_class_names_yaml(const std::string& data_yaml) {
+void Utils::get_class_names_yaml(std::vector<std::string>& class_names, const std::string& data_yaml) {
     YAML::Node data = YAML::LoadFile(data_yaml);
 
     YAML::Node namesNode = data["names"];
@@ -277,12 +277,12 @@ void Utils::get_class_names_yaml(const std::string& data_yaml) {
     }
 }
 
-void Utils::get_class_names(const std::filesystem::path& data) {
+void Utils::get_class_names(std::vector<std::string>& class_names, const std::filesystem::path& data) {
     std::string ext = data.extension().string().substr(1);
     if (ext == "yaml")
-        get_class_names_yaml(data.string());
+        get_class_names_yaml(class_names, data.string());
     else if (ext == "txt")
-        get_class_names(data.string());
+        get_class_names(class_names, data.string());
     else
         LOG("invalid data file");
 }
