@@ -5,7 +5,6 @@
 #include <ncnn/net.h>
 #include <opencv2/core/mat.hpp>
 
-// TODO: change doxygen comment style
 namespace Yolo {
 
 struct Object;
