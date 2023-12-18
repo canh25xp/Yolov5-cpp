@@ -2,6 +2,7 @@
 #include "object.hpp"
 #include "detector.hpp"
 #include "visualize.hpp"
+#include "general.hpp"
 #include <iostream>
 #include <vector>
 #include <filesystem>
@@ -363,29 +364,5 @@ void Utils::get_class_names(const std::filesystem::path& data) {
         get_class_names(data.string());
     else
         LOG("invalid data file");
-}
-
-bool Utils::isImage(const std::string& path) {
-    std::string ext = path.substr(path.find_last_of(".") + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), [] (unsigned char c) { return std::tolower(c); });
-    return std::find(IMG_FORMATS.begin(), IMG_FORMATS.end(), ext) != IMG_FORMATS.end();
-}
-
-bool Utils::isImage(const std::filesystem::path& path) {
-    std::string ext = path.extension().string().substr(1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), [] (unsigned char c) { return std::tolower(c); });
-    return std::find(IMG_FORMATS.begin(), IMG_FORMATS.end(), ext) != IMG_FORMATS.end();
-}
-
-bool Utils::isVideo(const std::string& path) {
-    std::string ext = path.substr(path.find_last_of(".") + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), [] (unsigned char c) { return std::tolower(c); });
-    return std::find(VID_FORMATS.begin(), VID_FORMATS.end(), ext) != VID_FORMATS.end();
-}
-
-bool Utils::isVideo(const std::filesystem::path& path) {
-    std::string ext = path.extension().string().substr(1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), [] (unsigned char c) { return std::tolower(c); });
-    return std::find(VID_FORMATS.begin(), VID_FORMATS.end(), ext) != VID_FORMATS.end();
 }
 }

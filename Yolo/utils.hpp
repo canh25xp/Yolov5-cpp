@@ -8,9 +8,6 @@ enum strategy {
     largestContour = 1          //select largest segment
 };
 
-extern std::vector<std::string> IMG_FORMATS;
-extern std::vector<std::string> VID_FORMATS;
-
 namespace Yolo {
 class Detector;
 struct Object;
@@ -76,13 +73,5 @@ private:
     cv::Mat applyMask(const cv::Mat& bgr, const cv::Mat& mask);
 
     float getRotatedRectImg(const cv::Mat& src, cv::Mat& dst, const cv::RotatedRect& rr);
-
-    bool isImage(const std::string& path);
-
-    bool isImage(const std::filesystem::path& path);
-
-    bool isVideo(const std::string& path);
-
-    bool isVideo(const std::filesystem::path& path);
 };
 }
