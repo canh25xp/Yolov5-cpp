@@ -113,9 +113,6 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
            +--+--+--+--+------------+----------------------+----------------|
     */
 
-    ncnn::Mat mask_proto;
-    ex.extract(seg_blob, mask_proto);
-
     std::vector<Object> proposals;
 
     generate_proposals(out, prob_threshold, proposals);
@@ -136,6 +133,8 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
     }
 
     ncnn::Mat mask_pred_result;
+    ncnn::Mat mask_proto;
+    ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
     int objCount = (count > max) ? max : count;
@@ -308,9 +307,6 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
                 +-------------------------- // ----+
     */
 
-    ncnn::Mat mask_proto;
-    ex.extract(seg_blob, mask_proto);
-
     std::vector<Object> proposals;
 
     // anchor setting from yolov5/models/yolov5s.yaml
@@ -340,6 +336,8 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
     }
 
     ncnn::Mat mask_pred_result;
+    ncnn::Mat mask_proto;
+    ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
     int objCount = (count > max) ? max : count;
