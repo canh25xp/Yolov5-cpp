@@ -5,6 +5,7 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <ncnn/net.h>
 
 // TODO: Config logger for Yolo
 
