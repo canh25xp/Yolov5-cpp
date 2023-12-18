@@ -43,8 +43,6 @@ public:
 public:
     int run();
 
-    int load(Detector& detector);
-
     void video(std::string inputPath);
 
     void image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder);

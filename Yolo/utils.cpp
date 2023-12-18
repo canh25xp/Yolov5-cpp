@@ -60,11 +60,6 @@ int Utils::run() {
     return 1;
 }
 
-// int Utils::load(Detector& detector) {
-//     this->detector = &detector;
-//     return 0;
-// }
-
 void Utils::image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
     cv::Mat in = cv::imread(inputPath.string());
     std::vector<Object> objects;
