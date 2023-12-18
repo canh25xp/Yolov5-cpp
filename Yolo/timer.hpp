@@ -1,13 +1,25 @@
 #pragma once
 #include <chrono>
-#include <string>
 
 namespace Yolo {
-struct Timer {
-    std::chrono::time_point<std::chrono::high_resolution_clock> start{}, finish{};
-    std::chrono::duration<double, std::milli> duration{}; //duration in milliseconds
-    std::string task;
-    Timer(const char* _task);
+class Timer {
+public:
+    Timer(double& elapsedTime);
     ~Timer();
+
+    /// @brief Reset timer
+    void Reset();
+
+    /// @brief Get Elapsed Time
+    /// @return Elapsed Time in milliseconds
+    double ElapsedMillis();
+
+    /// @brief Get duration from the last call to itself or from the start
+    /// @return Duration in milliseconds
+    double Interval();
+private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_start {};
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_lastInterval {};
+    double& m_elapsedTime;
 };
 } // namespace Yolo

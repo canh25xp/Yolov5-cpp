@@ -1,18 +1,31 @@
 #include "timer.hpp"
-#include <iostream>
+#include <chrono>
 
-using namespace std::chrono_literals;
 using namespace std::chrono;
 
 namespace Yolo{
-Timer::Timer(const char* _task) {
-    task = _task;
-    start = high_resolution_clock::now();
+Timer::Timer(double& elapsedTime) : m_elapsedTime(elapsedTime) {
+    Reset();
+}
+
+void Timer::Reset() {
+    m_start = high_resolution_clock::now();
+    m_lastInterval = m_start;
+    m_elapsedTime = 0.0;
+}
+
+double Timer::ElapsedMillis() {
+    return duration<double, std::milli> (high_resolution_clock::now() - m_start).count(); //duration in milliseconds
+}
+
+double Timer::Interval() {
+    time_point<high_resolution_clock> now = high_resolution_clock::now();
+    double interval = duration<double, std::milli>(now - m_lastInterval).count();
+    m_lastInterval = now;
+    return interval;
 }
 
 Timer::~Timer() {
-    finish = high_resolution_clock::now();
-    duration = finish - start;
-    std::cout << task << " took " << duration.count() << std::endl;
+    m_elapsedTime = ElapsedMillis();
 }
 } // namespace Yolo
