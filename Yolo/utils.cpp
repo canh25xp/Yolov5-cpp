@@ -114,7 +114,7 @@ int Utils::run() {
     if (this->fp32)
         detector->use_fp32();
 
-    if (load(this->model))
+    if (detector->load(model))
         return -1;
 
     std::filesystem::path dataPath = this->data;
@@ -143,16 +143,10 @@ int Utils::run() {
     return 1;
 }
 
-int Utils::load(const std::string& model) {
-    std::filesystem::path bin = model + ".bin";
-    std::filesystem::path param = model + ".param";
-    load(bin, param);
-    return 0;
-}
-
-int Utils::load(const std::filesystem::path& bin, const std::filesystem::path& param) {
-    return detector->load(bin.string().c_str(), param.string().c_str());
-}
+// int Utils::load(Detector& detector) {
+//     this->detector = &detector;
+//     return 0;
+// }
 
 void Utils::draw_objects(cv::Mat& bgr, const std::vector<Object>& objects, int colorMode) {
     size_t objCount = objects.size();

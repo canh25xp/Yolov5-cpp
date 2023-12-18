@@ -58,11 +58,7 @@ public:
 public:
     int run();
 
-    int load(const std::string& model);
-
-    int load(const std::filesystem::path& bin, const std::filesystem::path& param);
-
-    // int load(const Detector& detector);
+    int load(Detector& detector);
 
     void video(std::string inputPath);
 

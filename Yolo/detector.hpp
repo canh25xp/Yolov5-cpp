@@ -1,4 +1,7 @@
 #pragma once
+
+#include <filesystem>
+
 #include <ncnn/net.h>
 #include <opencv2/core/mat.hpp>
 
@@ -34,6 +37,13 @@ public:
     /// </summary>
     void use_fp32();
     // TODO: is this option really do anything ?
+
+    /// @brief This load method assumed *.bin and *.param file have the same name and in the same folder. For example : yolov5-seg.bin, yolov5-seg.param
+    /// @param model name of the model without extension
+    /// @return 0 if successfully load, -1 if fail
+    int load(const std::string& model);
+
+    int load(const std::filesystem::path& bin, const std::filesystem::path& param);
 
     /// <summary>
     /// Load ncnn model
