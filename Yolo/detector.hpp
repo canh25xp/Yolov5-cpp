@@ -5,20 +5,6 @@
 #include <ncnn/net.h>
 #include <opencv2/core/mat.hpp>
 
-#include "timer.hpp"
-
-#ifdef NDEBUG
-#define TIME_LOG(name)
-#else
-#define TIME_LOG(name) Timer timer(name)
-#endif // NDEBUG
-
-#ifdef BENCHMARK
-#define LOG(message)
-#else
-#define LOG(message) std::cout << message
-#endif // _DEBUG
-
 // TODO: change doxygen comment style
 namespace Yolo {
 

@@ -3,6 +3,8 @@
 #include "object.hpp"
 #include "anchor.hpp"
 #include "visualize.hpp"
+#include "timer.hpp"
+#include "logger.hpp"
 
 #include <filesystem>
 
@@ -63,7 +65,8 @@ void Detector::get_blob_name(const char* in, const char* out, const char* out1, 
 }
 
 int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
-    TIME_LOG("Inference");
+    double time;
+    TIME_LOG(time);
     // load image
     const int img_w = bgr.cols;
     const int img_h = bgr.rows;
@@ -181,7 +184,8 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
 }
 
 int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
-    TIME_LOG("Inference");
+    double time;
+    TIME_LOG(time);
     // load image
     const int img_w = bgr.cols;
     const int img_h = bgr.rows;

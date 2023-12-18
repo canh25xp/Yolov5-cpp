@@ -4,6 +4,7 @@
 #include "visualize.hpp"
 #include "general.hpp"
 #include "dataloader.hpp"
+#include "logger.hpp"
 
 #include <iostream>
 #include <vector>
