@@ -35,6 +35,9 @@ bool isVideo(const std::filesystem::path& path) {
     return std::find(VID_FORMATS.begin(), VID_FORMATS.end(), ext) != VID_FORMATS.end();
 }
 
+bool isFolder(const std::filesystem::path& path) {
+    return path.has_extension();
+}
 cv::Mat applyMask(const cv::Mat& bgr, const cv::Mat& mask) {
     cv::Mat binMask;
     cv::threshold(mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization

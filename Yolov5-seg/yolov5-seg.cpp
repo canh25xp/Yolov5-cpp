@@ -41,7 +41,7 @@ std::string project = "runs/idcard";
 std::string name    = "exp";
 std::string input   = "data/images/sample.jpg";
 std::string model   = "weights/yolov5s-seg-idcard-best-2.ncnn";
-std::string data = "data/idcard.yaml";
+std::string data    = "data/idcard.yaml";
 
 std::vector<std::string> class_names;
 
@@ -102,7 +102,7 @@ int run() {
     std::filesystem::path outputPath = project + "/" + name;
     std::filesystem::path inputPath = input;
 
-    if (not inputPath.has_extension()) {
+    if (!Yolo::isFolder(inputPath)) {
         show = false;
         folder(inputPath, outputPath);
         return 0;
