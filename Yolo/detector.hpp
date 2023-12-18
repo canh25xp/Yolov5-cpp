@@ -98,9 +98,9 @@ private:
 
     void qsort_descent_inplace(std::vector<Object>& faceobjects);
 
-    float sigmoid(float x);
+    inline float sigmoid(float x);
 
-    float relu(float x);
+    inline float relu(float x);
     
     void generate_proposals(const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
