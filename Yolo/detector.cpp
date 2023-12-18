@@ -1,7 +1,7 @@
 #include "detector.hpp"
 #include "layers.hpp"
 #include "object.hpp"
-#include "anchors.hpp"
+#include "anchor.hpp"
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
