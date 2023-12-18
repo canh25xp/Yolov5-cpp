@@ -50,13 +50,6 @@ public:
     void image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder);
 
     void folder(const std::filesystem::path& inputFolder, const std::filesystem::path& outputFolder);
-
-    void get_class_names(std::vector<std::string>& class_names, const std::string& data);
-
-    void get_class_names_yaml(std::vector<std::string>& class_names, const std::string& data_yaml);
-
-    void get_class_names(std::vector<std::string>& class_names, const std::filesystem::path& data);
-
 private:
     Detector* detector;
     std::vector<std::string> class_names;
