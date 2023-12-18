@@ -1,5 +1,5 @@
 #include "yolo/utils.hpp"
-#include "object.hpp"
+#include "yolo/object.hpp"
 #include "yolo/detector.hpp"
 #include "yolo/visualize.hpp"
 #include "yolo/general.hpp"

@@ -1,5 +1,5 @@
 #include "yolo/visualize.hpp"
-#include "object.hpp"
+#include "yolo/object.hpp"
 
 #include <ncnn/mat.h>
 #include <opencv2/core/mat.hpp>
