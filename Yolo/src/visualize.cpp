@@ -1,4 +1,4 @@
-#include "visualize.hpp"
+#include "yolo/visualize.hpp"
 #include "object.hpp"
 
 #include <ncnn/mat.h>

@@ -1,10 +1,10 @@
-#include "utils.hpp"
+#include "yolo/utils.hpp"
 #include "object.hpp"
-#include "detector.hpp"
-#include "visualize.hpp"
-#include "general.hpp"
-#include "dataloader.hpp"
-#include "logger.hpp"
+#include "yolo/detector.hpp"
+#include "yolo/visualize.hpp"
+#include "yolo/general.hpp"
+#include "yolo/dataloader.hpp"
+#include "yolo/logger.hpp"
 
 #include <iostream>
 #include <vector>

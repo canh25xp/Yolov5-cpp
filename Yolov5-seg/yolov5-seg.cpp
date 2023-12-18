@@ -1,4 +1,4 @@
-#include "yolo.hpp"
+#include "yolo/yolo.hpp"
 #include "CLI/CLI.hpp"
 
 #define GET(...) add_option(__VA_ARGS__)

@@ -1,10 +1,10 @@
-#include "detector.hpp"
-#include "layers.hpp"
+#include "yolo/detector.hpp"
+#include "yolo/layers.hpp"
 #include "object.hpp"
 #include "anchor.hpp"
-#include "visualize.hpp"
-#include "timer.hpp"
-#include "logger.hpp"
+#include "yolo/visualize.hpp"
+#include "yolo/timer.hpp"
+#include "yolo/logger.hpp"
 
 #include <filesystem>
 
