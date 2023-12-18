@@ -31,10 +31,8 @@ public:
 
     ~Detector();
 
-    
-    /// <summary>
-    /// Use 32-bit floating point inference, otherwise use 16-bit floating point
-    /// </summary>
+        
+    /// @brief Use 32-bit floating point inference, otherwise use 16-bit floating point
     void use_fp32();
     // TODO: is this option really do anything ?
 
@@ -45,38 +43,32 @@ public:
 
     int load(const std::filesystem::path& bin, const std::filesystem::path& param);
 
-    /// <summary>
-    /// Load ncnn model
-    /// </summary>
-    /// <param name="bin">path to *.bin</param>
-    /// <param name="param">path to *param</param>
-    /// <returns>0 if successed</returns>
+    /// @brief Load ncnn model bin and param
+    /// @param bin path to *.bin
+    /// @param param path to *.param
+    /// @return 0 if successed
     int load(const char* bin, const char* param);
 
-    /// <summary>
-    /// Normal detection
-    /// </summary>
-    /// <param name="bgr">Input image</param>
-    /// <param name="objects">Vector contains detected objects</param>
-    /// <param name="target_size">Target size</param>
-    /// <param name="prob_threshold">Confident threshold</param>
-    /// <param name="nms_threshold">non max suppression threshold</param>
-    /// <param name="agnostic">Agnostic</param>
-    /// <param name="max">max objects detection</param>
-    /// <returns>0 if success</returns>
+    /// @brief Normal detection
+    /// @param bgr Input image
+    /// @param objects Vector contains detected objects
+    /// @param target_size Target size
+    /// @param prob_threshold Confident threshold
+    /// @param nms_threshold Non max suppression threshold
+    /// @param agnostic Agnostic
+    /// @param max Max objects detection
+    /// @return 0
     int detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_size = 640, float prob_threshold = 0.25f, float nms_threshold = 0.45f, bool agnostic = false, int max = 100);
 
-    /// <summary>
-    /// Dynamic detection
-    /// </summary>
-    /// <param name="bgr">Input image</param>
-    /// <param name="objects">Vector contains detected objects</param>
-    /// <param name="target_size">Target size</param>
-    /// <param name="prob_threshold">Confident threshold</param>
-    /// <param name="nms_threshold">non max suppression threshold</param>
-    /// <param name="agnostic">Agnostic</param>
-    /// <param name="max">max objects detection</param>
-    /// <returns>0 if success</returns>
+    /// @brief Dynamic detection
+    /// @param bgr Input image
+    /// @param objects Vector contains detected objects
+    /// @param target_size Target size
+    /// @param prob_threshold Confident threshold
+    /// @param nms_threshold Non max suppression threshold
+    /// @param agnostic Agnostic
+    /// @param max Max objects detection
+    /// @return 0
     int detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size = 640, float prob_threshold = 0.25f, float nms_threshold = 0.45f, bool agnostic = false, int max = 100);
     // TODO: some how refactoring these two functions
 
@@ -115,13 +107,11 @@ private:
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
     void generate_proposals(Anchor anchor, float prob_threshold, std::vector<Object>& objects);
 
-    /// <summary>
-    /// Apply non max suppression
-    /// </summary>
-    /// <param name="faceobjects">objects vector</param>
-    /// <param name="picked">picked objects index vector</param>
-    /// <param name="nms_threshold">non max suppression threshold</param>
-    /// <param name="agnostic">agnostic flag</param>
+    /// @brief Apply non max suppression
+    /// @param faceobjects objects vector
+    /// @param picked picked objects index vector
+    /// @param nms_threshold Non max suppression threshold
+    /// @param agnostic
     void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic = true);
 };
 }
