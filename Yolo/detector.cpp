@@ -11,7 +11,7 @@
 #include <spdlog/spdlog.h>
 
 #define MAX_STRIDE  64
-#define PERMUTE     1 // Using the permute layer output. Otherwise, use convolution layer
+#define PERMUTE     0 // Using the permute layer output. Otherwise, use convolution layer
 #define FAST_EXP    1 // Using fast exponential function
 
 namespace Yolo {
@@ -586,21 +586,21 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
                                   std::vector<Object>& objects) {
 #if PERMUTE
     const int num_grid = feat_blob.h;
-    const int num_grid_x = (in_pad.w > in_pad.h) ? (in_pad.w / stride)     : (num_grid / (in_pad.h / stride));
+    const int num_grid_x = (in_pad.w > in_pad.h) ? (in_pad.w / stride)     : (num_grid / (in_pad.h / stride)); // num_grid / num_grid_y
     const int num_grid_y = (in_pad.w > in_pad.h) ? (num_grid / num_grid_x) : (in_pad.h / stride);
 
     const int num_anchors = anchors.w / 2;
     const int num_class = feat_blob.w - 5 - 32;
 
     const int feat_offset = num_grid_x;
-#else
+#else // Convolution
     const int num_grid_x = feat_blob.w;
     const int num_grid_y = feat_blob.h;
 
     const int num_anchors = anchors.w / 2;
     const int num_class = feat_blob.c / num_anchors - 5 - 32;
 
-    const int feat_offset = num_class + 5 + 32;
+    const int feat_offset = feat_blob.c / (anchors.w / 2);
 #endif
 
     // enumerate all anchor types
@@ -612,7 +612,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
 #if PERMUTE
                 const float* featptr = feat_blob.channel(q).row(i * feat_offset + j);
                 float box_score = featptr[4];
-#else
+#else // Convolution
                 float box_score = feat_blob.channel(q * feat_offset + 4).row(i)[j];
 #endif
                 float box_confidence = sigmoid(box_score);
@@ -625,7 +625,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
                 for (int k = 0; k < num_class; k++) {
 #if PERMUTE
                     float score = featptr[5 + k];
-#else             
+#else // Convolution
                     float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
 #endif
                     if (score > class_score) {
@@ -650,7 +650,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
                 float dy = sigmoid(featptr[1]);
                 float dw = sigmoid(featptr[2]);
                 float dh = sigmoid(featptr[3]);
-#else
+#else // Convolution
                 float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
                 float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
                 float dw = sigmoid(feat_blob.channel(q * feat_offset + 2).row(i)[j]);
@@ -678,7 +678,7 @@ void Detector::generate_proposals(const ncnn::Mat& anchors,
 #if PERMUTE
                 obj.mask_feat.resize(32);
                 std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
-#else
+#else // Convolution
                 for (int c = 0; c < 32; c++)
                     obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
 #endif
