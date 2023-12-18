@@ -99,6 +99,8 @@ private:
 
     float relu(float x);
     
+    void generate_proposals(const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
+    void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
     void generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects);
 
     /// <summary>
