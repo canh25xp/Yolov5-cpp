@@ -55,7 +55,7 @@ int Utils::run() {
         return 0;
     }
 
-    LOG("input type not supported");
+    LOG_ERROR("input type not supported");
     return 1;
 }
 
@@ -83,7 +83,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     std::string anglePath = rotateFolder + "/" + "angle.txt";
 
     const size_t objCount = objects.size();
-    LOG("Objects count = " << objCount << std::endl);
+    LOG_INFO("Objects count = {}\n", objCount);
 
     int color_index = 0;
     cv::Mat out = in.clone();
@@ -169,7 +169,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
         }
     }
 
-    LOG(labels);
+    LOG_INFO(labels);
 
     if (show) {
         cv::imshow("Detect", out);
@@ -179,7 +179,7 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
     if (save) {
         cv::utils::fs::createDirectory(outputFolder.string());
         cv::imwrite(outputPath, out);
-        LOG("\nOutput saved at " << outputPath);
+        LOG_INFO("\nOutput saved at {}", outputPath);
     }
 
     if (save_txt) {
@@ -187,32 +187,32 @@ void Utils::image(const std::filesystem::path& inputPath, const std::filesystem:
         std::ofstream txtFile(labelsPath);
         txtFile << labels << " " << contours;
         txtFile.close();
-        LOG("\nLabels saved at " << labelsPath);
+        LOG_INFO("\nLabels saved at {}", labelsPath);
     }
 }
 
 void Utils::folder(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
-    LOG("Auto running on all images in the input folder");
+    LOG_INFO("Auto running on all images in the input folder");
     int count = 0;
     auto tStart = std::chrono::high_resolution_clock::now();
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(inputPath)) {
         std::string path = entry.path().string();
-        LOG("\n------------------------------------------------" << std::endl);
-        LOG(path << std::endl);
+        LOG_INFO("\n------------------------------------------------\n");
+        LOG_INFO("{}\n", path);
         if (isImage(path)) {
             count++;
             image(entry.path(), outputFolder);
         }
         else {
-            LOG("skipping non image file");
+            LOG_INFO("skipping non image file");
         }
     }
     auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
     double average = total / count;
-    LOG("\n------------------------------------------------" << std::endl);
-    LOG(count << " images processed" << std::endl);
-    LOG("Total time taken: " << total << " ms" << std::endl);
-    LOG("Average time taken: " << average << " ms" << std::endl);
+    LOG_INFO("\n------------------------------------------------\n");
+    LOG_INFO("{} images processed\n", count);
+    LOG_INFO("Total time taken: {} ms\n",total);
+    LOG_INFO("Average time taken: {} ms\n", average);
 }
 
 void Utils::video(std::string inputPath) {
@@ -224,8 +224,8 @@ void Utils::video(std::string inputPath) {
         capture.open(inputPath);
     }
     if (capture.isOpened()) {
-        LOG("Object Detection Started...." << std::endl);
-        LOG("Press q or esc to stop" << std::endl);
+        LOG_INFO("Object Detection Started....\n");
+        LOG_INFO("Press q or esc to stop\n");
 
         std::vector<Object> objects;
 
@@ -253,7 +253,7 @@ void Utils::video(std::string inputPath) {
         } while (!frame.empty());
     }
     else {
-        LOG("Could not Open Camera/Video");
+        LOG_ERROR("Could not Open Camera/Video");
     }
 }
 }

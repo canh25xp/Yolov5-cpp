@@ -13,10 +13,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <ncnn/net.h>
 
-// TODO: Config logger for Yolo
-
-#include <spdlog/spdlog.h>
-
 #define MAX_STRIDE  64
 #define PERMUTE     0 // Using the permute layer output. Otherwise, use convolution layer
 #define FAST_EXP    1 // Using fast exponential function
