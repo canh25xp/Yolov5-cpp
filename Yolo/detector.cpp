@@ -322,9 +322,7 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
         anchors[4] = 33.f;
         anchors[5] = 23.f;
 
-        std::vector<Object> objects;
-        generate_proposals(anchors, 8, out1, prob_threshold, objects);
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
+        generate_proposals(anchors, 8, out1, prob_threshold, proposals);
     }
 
     // stride 16
@@ -337,9 +335,7 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
         anchors[4] = 59.f;
         anchors[5] = 119.f;
 
-        std::vector<Object> objects;
-        generate_proposals(anchors, 16, out2, prob_threshold, objects);
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
+        generate_proposals(anchors, 16, out2, prob_threshold, proposals);
     }
 
     // stride 32
@@ -352,9 +348,7 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
         anchors[4] = 373.f;
         anchors[5] = 326.f;
 
-        std::vector<Object> objects;
-        generate_proposals(anchors, 32, out3, prob_threshold, objects);
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
+        generate_proposals(anchors, 32, out3, prob_threshold, proposals);
     }
 
     // sort all proposals by score from highest to lowest
