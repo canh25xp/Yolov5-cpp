@@ -33,3 +33,5 @@ target_include_directories(Yolo
 target_link_libraries(Yolo 
     PUBLIC ${OpenCV_LIBS} compiler_flags
     PRIVATE ncnn spdlog yaml-cpp)
+
+add_subdirectory(test)
