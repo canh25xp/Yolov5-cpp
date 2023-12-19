@@ -25,7 +25,7 @@ bool rotate = false;
 bool show = false;
 bool dynamic = false;
 bool agnostic = false;
-bool fp32 = false;
+bool half = true;
 bool noBbox = false;
 bool noLabel = false;
 bool drawMinRect = false;
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     parser.HAS("--show,--view-img",         show, "show result");
     parser.HAS("--dynamic",                 dynamic, "using dynamic inference");
     parser.HAS("--agnostic-nms",            agnostic, "class-agnostic NMS");
-    parser.HAS("--fp32",                    fp32, "using 32-bit floating point inference");
+    parser.HAS("--half",                    half, "use FP16 half-precision inference");
     parser.HAS("--draw-contour",            drawContour, "draw contour instead of mask");
     parser.HAS("--no-bbox",                 noBbox, "no draw bounding box");
     parser.HAS("--no-label,--hide-labels",  noLabel, "no draw label");
@@ -92,7 +92,7 @@ int run() {
 
     std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
 
-    if (fp32)
+    if (!half)
         detector.use_fp32();
 
     if (detector.load(model))
