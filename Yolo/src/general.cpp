@@ -10,6 +10,7 @@ namespace Yolo {
 
 std::vector<std::string> IMG_FORMATS {"bmp", "dng", "jpg", "jpeg", "mpo", "png", "tif", "tiff", "webp", "pfm"};
 std::vector<std::string> VID_FORMATS {"asf", "avi", "gif", "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "ts", "wmv"};
+std::vector<std::string> URL_PREFIXES {"rtsp://", "rtmp://", "http://", "https://"};
 
 bool isImage(const std::string& path) {
     std::string ext = path.substr(path.find_last_of(".") + 1);
@@ -37,6 +38,15 @@ bool isVideo(const std::filesystem::path& path) {
 
 bool isFolder(const std::filesystem::path& path) {
     return path.has_extension();
+}
+
+bool isURL(const std::string& path) {
+    for (const auto& prefix : URL_PREFIXES) {
+        if (path.compare(0, prefix.length(), prefix) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {
