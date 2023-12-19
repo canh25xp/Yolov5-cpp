@@ -91,11 +91,13 @@ int main(int argc, char** argv) {
 }
 
 int run() {
-    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name, exist_ok);
     bool is_url = Yolo::isURL(source);
     bool is_image = Yolo::isImage(source);
     bool is_video = Yolo::isVideo(source);
     bool webcam = true ? (source == "0") : false;
+
+    // Directories
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred() /= name, exist_ok, "", save);
 
     if (detector.load(model, half))
         return -1;
