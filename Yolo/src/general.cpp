@@ -1,10 +1,12 @@
 #include "yolo/general.hpp"
+
 #include <vector>
 #include <string>
 #include <filesystem>
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <imutils/paths.hpp>
 
 namespace Yolo {
 
@@ -85,6 +87,9 @@ std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool 
     return path;
 }
 
+std::vector<std::string> getListFileDirs(const std::string& basePath) {
+    return imutils::listFiles(basePath, IMG_FORMATS);
+}
 cv::Mat applyMask(const cv::Mat& bgr, const cv::Mat& mask) {
     cv::Mat binMask;
     cv::threshold(mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization

@@ -32,6 +32,6 @@ target_include_directories(Yolo
 
 target_link_libraries(Yolo 
     PUBLIC ${OpenCV_LIBS} compiler_flags spdlog
-    PRIVATE ncnn yaml-cpp)
+    PRIVATE ncnn yaml-cpp imutils-cpp)
 
 add_subdirectory(test)
