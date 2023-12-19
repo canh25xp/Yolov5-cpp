@@ -35,6 +35,6 @@ float getRotatedRectImg(const cv::Mat& src, cv::Mat& dst, const cv::RotatedRect&
 
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok = false, const std::string& sep = "", bool mkdir = false);
 
-std::vector<std::string> getListFileDirs(const std::string& basePath);
+std::vector<std::string> getListFileDirs(const std::filesystem::path& basePath);
 
 } // namespace Yolo
