@@ -23,6 +23,6 @@ bool isURL(const std::string& path);
 
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok = false, const std::string& sep = "", bool mkdir = false);
 
-std::vector<std::string> getListFileDirs(const std::filesystem::path& basePath);
+std::vector<std::filesystem::path> getListFileDirs(const std::filesystem::path& basePath);
 
 } // namespace Yolo

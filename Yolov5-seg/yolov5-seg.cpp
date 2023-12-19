@@ -104,7 +104,7 @@ int run() {
     if (detector.load(model, half))
         return -1;
 
-    std::vector<std::string> paths {};
+    std::vector<std::filesystem::path> paths {};
 
     // Load data
     if (is_webcam) {
@@ -127,10 +127,7 @@ int run() {
     }
 
     std::filesystem::path dataPath = data;
-
     Yolo::get_class_names(class_names, dataPath);
-
-    std::filesystem::path inputPath = source;
 
     // Run inference
     int count = paths.size();
@@ -138,14 +135,14 @@ int run() {
     auto tStart = std::chrono::high_resolution_clock::now();
     for (const auto& path : paths) {
         std::vector<Yolo::Object> objects;
-        cv::Mat in = cv::imread(inputPath.string());
+        cv::Mat in = cv::imread(path.string());
         if (dynamic)
             detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
         else
             detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
-        std::string fileName = inputPath.filename().string();
-        std::string stem = inputPath.stem().string();
+        std::string fileName = path.filename().string();
+        std::string stem = path.stem().string();
         std::string outputPath = save_dir.string() + "/" + fileName;
         std::string labelsFolder = save_dir.string() + "/labels";
         std::string labelsPath = labelsFolder + "/" + stem + ".txt";

@@ -43,7 +43,7 @@ bool isVideo(const std::filesystem::path& path) {
 }
 
 bool isFolder(const std::filesystem::path& path) {
-    return path.has_extension();
+    return !path.has_extension();
 }
 
 bool isURL(const std::string& path) {
@@ -91,7 +91,7 @@ std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool 
     return path;
 }
 
-std::vector<std::string> getListFileDirs(const std::filesystem::path& basePath) {
+std::vector<std::filesystem::path> getListFileDirs(const std::filesystem::path& basePath) {
     return imutils::listFiles(basePath, IMG_EXTS);
 }
 
