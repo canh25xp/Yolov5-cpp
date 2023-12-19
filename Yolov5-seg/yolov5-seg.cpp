@@ -195,6 +195,7 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
                     Yolo::draw_RotatedRect(out, rr, cv::Scalar(0, 255, 0), thickness);
                 rotAngle = Yolo::getRotatedRectImg(in, rotated, rr);
             }
+            // BUG:parent folder have not created
             std::filesystem::create_directory(rotateFolder);
             std::string rotatePath = rotateFolder + "/" + saveFileName;
             if (show)
