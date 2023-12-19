@@ -29,6 +29,7 @@ bool half = true;
 bool noBbox = false;
 bool noLabel = false;
 bool drawMinRect = false;
+bool exist_ok = false;
 
 int target_size = 640;
 float prob_threshold = 0.25f;
@@ -81,6 +82,7 @@ int main(int argc, char** argv) {
     parser.HAS("--no-bbox",                 noBbox, "no draw bounding box");
     parser.HAS("--no-label,--hide-labels",  noLabel, "no draw label");
     parser.HAS("--draw-minrect",            drawMinRect, "draw min area rect");
+    parser.HAS("--exist-ok",                exist_ok, "overide the already existing project/name, do not increment");
 
     CLI11_PARSE(parser, argc, argv);
     run();
@@ -89,10 +91,10 @@ int main(int argc, char** argv) {
 }
 
 int run() {
-    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
-    bool isURL = Yolo::isURL(source);
-    bool isImage = Yolo::isImage(source);
-    bool isVideo = Yolo::isVideo(source);
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name, exist_ok);
+    bool is_url = Yolo::isURL(source);
+    bool is_image = Yolo::isImage(source);
+    bool is_video = Yolo::isVideo(source);
     bool webcam = true ? (source == "0") : false;
 
     if (detector.load(model, half))
