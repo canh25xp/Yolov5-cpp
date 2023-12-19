@@ -38,6 +38,43 @@ bool isVideo(const std::filesystem::path& path) {
 bool isFolder(const std::filesystem::path& path) {
     return path.has_extension();
 }
+
+std::filesystem::path increment_path(const std::string& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {
+    namespace fs = std::filesystem;
+
+    fs::path path(pathStr);
+
+    if (fs::exists(path) && !exist_ok) {
+        fs::path base_path, suffix;
+        if (fs::is_regular_file(path)) {
+            base_path = path.parent_path() / path.stem();
+            suffix = path.extension();
+        }
+        else
+            base_path = path;
+
+        for (int n = 2; n < 9999; ++n) {
+            fs::path p = base_path;
+            if (!sep.empty())
+                p += sep;
+            
+            p += std::to_string(n);
+            if (!suffix.empty())
+                p += suffix;
+
+            if (!fs::exists(p)) {
+                path = p;
+                break;
+            }
+        }
+    }
+
+    if (mkdir)
+        fs::create_directories(path);
+
+    return path;
+}
+
 cv::Mat applyMask(const cv::Mat& bgr, const cv::Mat& mask) {
     cv::Mat binMask;
     cv::threshold(mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization
@@ -70,7 +107,7 @@ std::vector<cv::Point> mask2segment(const cv::Mat& mask, int strategy) {
     else {
         contour = *std::max_element(contours.begin(), contours.end(),
                                     [] (const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
-                                        return a.size() < b.size();
+                                    return a.size() < b.size();
                                     });
     }
 

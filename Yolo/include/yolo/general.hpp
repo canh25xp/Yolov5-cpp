@@ -31,4 +31,6 @@ cv::Mat applyMask(const cv::Mat& bgr, const cv::Mat& mask);
 
 float getRotatedRectImg(const cv::Mat& src, cv::Mat& dst, const cv::RotatedRect& rr);
 
+std::filesystem::path increment_path(const std::string& pathStr, bool exist_ok = false, const std::string& sep = "", bool mkdir = false);
+
 } // namespace Yolo
