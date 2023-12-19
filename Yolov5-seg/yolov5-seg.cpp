@@ -89,6 +89,9 @@ int main(int argc, char** argv) {
 
 int run() {
     // Logger::Init();
+
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
+
     if (fp32)
         detector.use_fp32();
 
@@ -99,17 +102,16 @@ int run() {
 
     Yolo::get_class_names(class_names, dataPath);
 
-    std::filesystem::path outputPath = project + "/" + name;
     std::filesystem::path inputPath = source;
 
     if (!Yolo::isFolder(inputPath)) {
         show = false;
-        folder(inputPath, outputPath);
+        folder(inputPath, save_dir);
         return 0;
     }
 
     if (Yolo::isImage(inputPath)) {
-        image(inputPath, outputPath);
+        image(inputPath, save_dir);
         return 0;
     }
     if (source == "0" or Yolo::isVideo(inputPath)) {
