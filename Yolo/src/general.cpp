@@ -39,7 +39,7 @@ bool isFolder(const std::filesystem::path& path) {
     return path.has_extension();
 }
 
-std::filesystem::path increment_path(const std::string& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {
+std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {
     namespace fs = std::filesystem;
 
     fs::path path(pathStr);
