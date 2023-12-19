@@ -53,6 +53,7 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
 void folder(const std::filesystem::path& inputFolder, const std::filesystem::path& outputFolder);
 
 int main(int argc, char** argv) {
+    Yolo::Logger::Init();
     CLI::App parser {"Yolov5 segmentation NCNN"};
     argv = parser.ensure_utf8(argv);
 
@@ -88,8 +89,6 @@ int main(int argc, char** argv) {
 }
 
 int run() {
-    // Logger::Init();
-
     std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
     bool isURL = Yolo::isURL(source);
     bool isImage = Yolo::isImage(source);
@@ -120,7 +119,7 @@ int run() {
         return 0;
     }
 
-    // LOG_ERROR("input type not supported");
+    LOG_ERROR("input type not supported");
     return -1;
 }
 
@@ -143,7 +142,7 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
     std::string anglePath = rotateFolder + "/" + "angle.txt";
 
     const size_t objCount = objects.size();
-    // LOG_INFO("Objects count = {}\n", objCount);
+    LOG_INFO("Objects count = {}\n", objCount);
 
     int color_index = 0;
     cv::Mat out = in.clone();
@@ -229,7 +228,7 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
         }
     }
 
-    // LOG_INFO(labels);
+    LOG_INFO(labels);
 
     if (show) {
         cv::imshow("Detect", out);
@@ -239,7 +238,7 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
     if (save) {
         std::filesystem::create_directory(outputFolder.string());
         cv::imwrite(outputPath, out);
-        // LOG_INFO("\nOutput saved at {}", outputPath);
+        LOG_INFO("\nOutput saved at {}", outputPath);
     }
 
     if (save_txt) {
@@ -247,32 +246,32 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
         std::ofstream txtFile(labelsPath);
         txtFile << labels << " " << contours;
         txtFile.close();
-        // LOG_INFO("\nLabels saved at {}", labelsPath);
+        LOG_INFO("\nLabels saved at {}", labelsPath);
     }
 }
 
 void folder(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
-    // LOG_INFO("Auto running on all images in the input folder");
+    LOG_INFO("Auto running on all images in the input folder");
     int count = 0;
     auto tStart = std::chrono::high_resolution_clock::now();
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(inputPath)) {
         std::string path = entry.path().string();
-        // LOG_INFO("\n------------------------------------------------\n");
-        // LOG_INFO("{}\n", path);
+        LOG_INFO("\n------------------------------------------------\n");
+        LOG_INFO("{}\n", path);
         if (Yolo::isImage(path)) {
             count++;
             image(entry.path(), outputFolder);
         }
         else {
-            // LOG_INFO("skipping non image file");
+            LOG_INFO("skipping non image file");
         }
     }
     auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
     double average = total / count;
-    // LOG_INFO("\n------------------------------------------------\n");
-    // LOG_INFO("{} images processed\n", count);
-    // LOG_INFO("Total time taken: {} ms\n",total);
-    // LOG_INFO("Average time taken: {} ms\n", average);
+    LOG_INFO("\n------------------------------------------------\n");
+    LOG_INFO("{} images processed\n", count);
+    LOG_INFO("Total time taken: {} ms\n",total);
+    LOG_INFO("Average time taken: {} ms\n", average);
 }
 
 void video(std::string inputPath) {
@@ -284,8 +283,8 @@ void video(std::string inputPath) {
         capture.open(inputPath);
     }
     if (capture.isOpened()) {
-        // LOG_INFO("Object Detection Started....\n");
-        // LOG_INFO("Press q or esc to stop\n");
+        LOG_INFO("Object Detection Started....\n");
+        LOG_INFO("Press q or esc to stop\n");
 
         std::vector<Yolo::Object> objects;
 
@@ -313,6 +312,6 @@ void video(std::string inputPath) {
         } while (!frame.empty());
     }
     else {
-        // LOG_ERROR("Could not Open Camera/Video");
+        LOG_ERROR("Could not Open Camera/Video");
     }
 }

@@ -6,3 +6,4 @@
 #include "general.hpp"
 #include "layers.hpp"
 #include "object.hpp"
+#include "logger.hpp"
