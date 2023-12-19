@@ -12,6 +12,10 @@ namespace Yolo {
 
 std::vector<std::string> IMG_FORMATS {"bmp", "dng", "jpg", "jpeg", "mpo", "png", "tif", "tiff", "webp", "pfm"};
 std::vector<std::string> VID_FORMATS {"asf", "avi", "gif", "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "ts", "wmv"};
+
+std::vector<std::string> IMG_EXTS {".bmp", ".dng", ".jpg", ".jpeg", ".mpo", ".png", ".tif", ".tiff", ".webp", ".pfm"};
+std::vector<std::string> VID_EXTS {".asf", ".avi", ".gif", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".ts", ".wmv"};
+
 std::vector<std::string> URL_PREFIXES {"rtsp://", "rtmp://", "http://", "https://"};
 
 bool isImage(const std::string& path) {
@@ -88,7 +92,7 @@ std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool 
 }
 
 std::vector<std::string> getListFileDirs(const std::filesystem::path& basePath) {
-    return imutils::listFiles(basePath);
+    return imutils::listFiles(basePath, IMG_EXTS);
 }
 
 } // namespace Yolo
