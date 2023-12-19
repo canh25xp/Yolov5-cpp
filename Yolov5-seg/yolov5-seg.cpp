@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     parser.HAS("--show,--view-img",         show, "show result");
     parser.HAS("--dynamic",                 dynamic, "using dynamic inference");
     parser.HAS("--agnostic-nms",            agnostic, "class-agnostic NMS");
-    parser.HAS("--half",                    half, "use FP16 half-precision inference");
+    parser.HAS("--half,!--no-half",         half, "use FP16 half-precision inference");
     parser.HAS("--draw-contour",            drawContour, "draw contour instead of mask");
     parser.HAS("--no-bbox",                 noBbox, "no draw bounding box");
     parser.HAS("--no-label,--hide-labels",  noLabel, "no draw label");
@@ -91,11 +91,12 @@ int run() {
     // Logger::Init();
 
     std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
+    bool isURL = Yolo::isURL(source);
+    bool isImage = Yolo::isImage(source);
+    bool isVideo = Yolo::isVideo(source);
+    bool webcam = true ? (source == "0") : false;
 
-    if (!half)
-        detector.use_fp32();
-
-    if (detector.load(model))
+    if (detector.load(model, half))
         return -1;
 
     std::filesystem::path dataPath = data;

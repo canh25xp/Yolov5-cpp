@@ -31,9 +31,12 @@ void Detector::use_fp32() {
     net.opt.use_fp16_arithmetic = false;
 }
 
-int Detector::load(const std::string& model) {
+int Detector::load(const std::string& model, bool half) {
     std::filesystem::path bin = model + ".bin";
     std::filesystem::path param = model + ".param";
+    if (!half)
+        this->use_fp32();
+
     return load(bin, param);
 }
 
