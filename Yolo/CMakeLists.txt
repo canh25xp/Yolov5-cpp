@@ -1,11 +1,10 @@
 add_library(Yolo)
-# set(YOLO_SRC utils.cpp layers.cpp parser.cpp timer.cpp detector.cpp)
-file(GLOB YOLO_SRC *.cpp)
+file(GLOB YOLO_SRC src/*.cpp)
 
 target_sources(Yolo
     PRIVATE ${YOLO_SRC})
 
-message(STATUS "YOLO_SRC ${YOLO_SRC}")    
+# message(STATUS "YOLO_SRC ${YOLO_SRC}")
 
 set(CMAKE_DEBUG_POSTFIX d)
 
@@ -23,6 +22,16 @@ find_package(ncnn CONFIG REQUIRED)
 # MESSAGE(STATUS "LINK LIBRARIES ${OpenCV_LIBS}")
 set_target_properties(Yolo PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 
+target_include_directories(Yolo
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    )
+
 target_link_libraries(Yolo 
-    PUBLIC ${OpenCV_LIBS} compiler_flags
-    PRIVATE ncnn spdlog yaml-cpp)
+    PUBLIC ${OpenCV_LIBS} compiler_flags spdlog
+    PRIVATE ncnn yaml-cpp)
+
+add_subdirectory(test)

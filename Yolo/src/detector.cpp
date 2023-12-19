@@ -1,14 +1,17 @@
-#include "detector.hpp"
-#include "layers.hpp"
-#include "object.hpp"
+#include "yolo/detector.hpp"
+#include "yolo/layers.hpp"
+#include "yolo/object.hpp"
+#include "yolo/anchor.hpp"
+#include "yolo/visualize.hpp"
+#include "yolo/timer.hpp"
+#include "yolo/logger.hpp"
+
+#include <filesystem>
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
-// TODO: Config logger for Yolo
-
-#include <spdlog/spdlog.h>
+#include <ncnn/net.h>
 
 #define MAX_STRIDE  64
 #define PERMUTE     0 // Using the permute layer output. Otherwise, use convolution layer
@@ -26,6 +29,19 @@ void Detector::use_fp32() {
     net.opt.use_fp16_packed = false;
     net.opt.use_fp16_storage = false;
     net.opt.use_fp16_arithmetic = false;
+}
+
+int Detector::load(const std::string& model, bool half) {
+    std::filesystem::path bin = model + ".bin";
+    std::filesystem::path param = model + ".param";
+    if (!half)
+        this->use_fp32();
+
+    return load(bin, param);
+}
+
+int Detector::load(const std::filesystem::path& bin, const std::filesystem::path& param) {
+    return load(bin.string().c_str(), param.string().c_str());
 }
 
 int Detector::load(const char* bin, const char* param) {
@@ -48,7 +64,8 @@ void Detector::get_blob_name(const char* in, const char* out, const char* out1, 
 }
 
 int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
-    TIME_LOG("Inference");
+    double time;
+    TIME_LOG(time);
     // load image
     const int img_w = bgr.cols;
     const int img_h = bgr.rows;
@@ -110,57 +127,9 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
            +--+--+--+--+------------+----------------------+----------------|
     */
 
-    ncnn::Mat mask_proto;
-    ex.extract(seg_blob, mask_proto);
-
     std::vector<Object> proposals;
 
-    const int num_grid = out.h;
-    const int num_class = out.w - 5 - 32;
-    for (int i = 0; i < num_grid; i++) {
-        const float box_score = out.row(i)[4];
-
-        // find class index with max class score
-        int class_index = 0;
-        float class_score = -FLT_MAX;
-        for (int k = 0; k < num_class; k++) {
-            float score = out.row(i)[5 + k];
-            if (score > class_score) {
-                class_index = k;
-                class_score = score;
-            }
-        }
-
-        // combined score = box score * class score
-        float score = box_score * class_score;
-
-        // filter candidate boxes with combined score >= prob_threshold
-        if (score >= prob_threshold) {
-            const float cx = out.row(i)[0]; //center x coordinate
-            const float cy = out.row(i)[1]; //center y coordinate
-            const float bw = out.row(i)[2]; //box width
-            const float bh = out.row(i)[3]; //box height
-
-            // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
-            float x0 = cx - bw * 0.5f;
-            float y0 = cy - bh * 0.5f;
-            float x1 = cx + bw * 0.5f;
-            float y1 = cy + bh * 0.5f;
-
-            // collect candidates
-            Object obj;
-            obj.rect.x = x0;
-            obj.rect.y = y0;
-            obj.rect.width = x1 - x0;
-            obj.rect.height = y1 - y0;
-            obj.label = class_index;
-            obj.prob = score;
-            obj.mask_feat.resize(32);
-            std::copy(out.row(i) + 5 + num_class, out.row(i) + 5 + num_class + 32, obj.mask_feat.begin());
-
-            proposals.push_back(obj);
-        }
-    }
+    generate_proposals(out, prob_threshold, proposals);
 
     // sort all proposals by score from highest to lowest
     qsort_descent_inplace(proposals);
@@ -178,6 +147,8 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
     }
 
     ncnn::Mat mask_pred_result;
+    ncnn::Mat mask_proto;
+    ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
     int objCount = (count > max) ? max : count;
@@ -212,7 +183,8 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
 }
 
 int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, float prob_threshold, float nms_threshold, bool agnostic, int max) {
-    TIME_LOG("Inference");
+    double time;
+    TIME_LOG(time);
     // load image
     const int img_w = bgr.cols;
     const int img_h = bgr.rows;
@@ -350,71 +322,17 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
                 +-------------------------- // ----+
     */
 
-    ncnn::Mat mask_proto;
-    ex.extract(seg_blob, mask_proto);
-
     std::vector<Object> proposals;
 
     // anchor setting from yolov5/models/yolov5s.yaml
+    std::vector<Anchor> anchors {
+        {out1, 8,  {{10,  13}, {16,  30},  {33,  23}}},     // Stride 8
+        {out2, 16, {{30,  61}, {62,  45},  {59,  119}}},    // Stride 16
+        {out3, 32, {{116, 90}, {156, 198}, {373, 326}}},    // Stride 32
+    };
 
-    // stride 8
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 10.f;
-        anchors[1] = 13.f;
-        anchors[2] = 16.f;
-        anchors[3] = 30.f;
-        anchors[4] = 33.f;
-        anchors[5] = 23.f;
-
-        std::vector<Object> objects;
-#if PERMUTE
-        generate_proposals(anchors, 8, in_pad, out1, prob_threshold, objects);
-#else
-        generate_proposals(anchors, 8, out1, prob_threshold, objects);
-#endif // PERMUTE
-
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
-    }
-
-    // stride 16
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 30.f;
-        anchors[1] = 61.f;
-        anchors[2] = 62.f;
-        anchors[3] = 45.f;
-        anchors[4] = 59.f;
-        anchors[5] = 119.f;
-
-        std::vector<Object> objects;
-#if PERMUTE
-        generate_proposals(anchors, 16, in_pad, out2, prob_threshold, objects);
-#else
-        generate_proposals(anchors, 16, out2, prob_threshold, objects);
-#endif // PERMUTE
-
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
-    }
-
-    // stride 32
-    {
-        ncnn::Mat anchors(6);
-        anchors[0] = 116.f;
-        anchors[1] = 90.f;
-        anchors[2] = 156.f;
-        anchors[3] = 198.f;
-        anchors[4] = 373.f;
-        anchors[5] = 326.f;
-
-        std::vector<Object> objects;
-#if PERMUTE
-        generate_proposals(anchors, 32, in_pad, out3, prob_threshold, objects);
-#else
-        generate_proposals(anchors, 32, out3, prob_threshold, objects);
-#endif // PERMUTE
-
-        proposals.insert(proposals.end(), objects.begin(), objects.end());
+    for (auto anchor : anchors) {
+        generate_proposals(anchor, prob_threshold, proposals);
     }
 
     // sort all proposals by score from highest to lowest
@@ -433,6 +351,8 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
     }
 
     ncnn::Mat mask_pred_result;
+    ncnn::Mat mask_proto;
+    ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
     int objCount = (count > max) ? max : count;
@@ -587,91 +507,74 @@ inline float Detector::relu(float x) {
         return 0;
 }
 
-void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& in_pad, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
+void Detector::generate_proposals(const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
     const int num_grid = feat_blob.h;
-    int num_grid_x;
-    int num_grid_y;
-    if (in_pad.w > in_pad.h) {
-        num_grid_x = in_pad.w / stride;
-        num_grid_y = num_grid / num_grid_x;
-    }
-    else {
-        num_grid_y = in_pad.h / stride;
-        num_grid_x = num_grid / num_grid_y;
-    }
-    const int num_anchors = anchors.w / 2;
     const int num_class = feat_blob.w - 5 - 32;
-    // enumerate all anchor types
-    for (int q = 0; q < num_anchors; q++) {
-        const float anchor_w = anchors[q * 2];
-        const float anchor_h = anchors[q * 2 + 1];
-        for (int i = 0; i < num_grid_y; i++) {
-            for (int j = 0; j < num_grid_x; j++) {
-                float box_score = feat_blob.channel(q).row(i * num_grid_x + j)[4];
-                float box_confidence = sigmoid(box_score);
-                if (box_confidence >= prob_threshold) {
-                    // find class_index with max class_score
-                    int class_index = 0;
-                    float class_score = -FLT_MAX;
-                    for (int k = 0; k < num_class; k++) {
-                        float score = feat_blob.channel(q).row(i * num_grid_x + j)[5 + k];
-                        if (score > class_score) {
-                            class_index = k;
-                            class_score = score;
-                        }
-                    }
+    for (int i = 0; i < num_grid; i++) {
+        const float* featptr = feat_blob.row(i);
+        const float box_score = featptr[4];
 
-                    // combined score = box score * class score
-                    float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
-
-                    // filter candidate boxes with combined score >= prob_threshold
-                    if (score >= prob_threshold) {
-                        // yolov5/models/yolo.py Detect forward
-                        // y = x[i].sigmoid()
-                        // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
-                        // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                        float dx = sigmoid(feat_blob.channel(q).row(i * num_grid_x + j)[0]);
-                        float dy = sigmoid(feat_blob.channel(q).row(i * num_grid_x + j)[1]);
-                        float dw = sigmoid(feat_blob.channel(q).row(i * num_grid_x + j)[2]);
-                        float dh = sigmoid(feat_blob.channel(q).row(i * num_grid_x + j)[3]);
-
-                        float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
-                        float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
-                        float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
-                        float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
-
-                        // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
-                        float x0 = cx - bw * 0.5f;
-                        float y0 = cy - bh * 0.5f;
-                        float x1 = cx + bw * 0.5f;
-                        float y1 = cy + bh * 0.5f;
-
-                        // collect candidates
-                        Object obj;
-                        obj.rect.x = x0;
-                        obj.rect.y = y0;
-                        obj.rect.width = x1 - x0;
-                        obj.rect.height = y1 - y0;
-                        obj.label = class_index;
-                        obj.prob = score;
-                        obj.mask_feat.resize(32);
-                        std::copy(feat_blob.channel(q).row(i * num_grid_x + j) + 5 + num_class, feat_blob.channel(q).row(i * num_grid_x + j) + 5 + num_class + 32, obj.mask_feat.begin());
-                        objects.push_back(obj);
-                    }
-                }
+        float box_confidence = box_score;
+        if (box_confidence < prob_threshold)
+            continue;
+        
+        // find class index with max class score
+        int class_index = 0;
+        float class_score = -FLT_MAX;
+        for (int k = 0; k < num_class; k++) {
+            float score = featptr[5 + k];
+            if (score > class_score) {
+                class_index = k;
+                class_score = score;
             }
         }
+
+        // combined score = box score * class score
+        float score = box_score * class_score;
+
+        // filter candidate boxes with combined score >= prob_threshold
+        if (score < prob_threshold)
+            continue;
+
+        const float cx = featptr[0]; //center x coordinate
+        const float cy = featptr[1]; //center y coordinate
+        const float bw = featptr[2]; //box width
+        const float bh = featptr[3]; //box height
+
+        // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
+        float x0 = cx - bw * 0.5f;
+        float y0 = cy - bh * 0.5f;
+        float x1 = cx + bw * 0.5f;
+        float y1 = cy + bh * 0.5f;
+
+        // collect candidates
+        Object obj;
+        obj.rect.x = x0;
+        obj.rect.y = y0;
+        obj.rect.width = x1 - x0;
+        obj.rect.height = y1 - y0;
+        obj.label = class_index;
+        obj.prob = score;
+
+        obj.mask_feat.resize(32);
+        std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
+
+        objects.push_back(obj);
     }
 }
 
-void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const ncnn::Mat& feat_blob, float prob_threshold, std::vector<Object>& objects) {
+void Detector::generate_proposals(const ncnn::Mat& anchors,
+                                  int stride,
+                                  const ncnn::Mat& feat_blob,
+                                  float prob_threshold,
+                                  std::vector<Object>& objects) {
     const int num_grid_x = feat_blob.w;
     const int num_grid_y = feat_blob.h;
 
     const int num_anchors = anchors.w / 2;
     const int num_class = feat_blob.c / num_anchors - 5 - 32;
 
-    const int feat_offset = num_class + 5 + 32;
+    const int feat_offset = feat_blob.c / (anchors.w / 2);
     // enumerate all anchor types
     for (int q = 0; q < num_anchors; q++) {
         const float anchor_w = anchors[q * 2];
@@ -679,154 +582,158 @@ void Detector::generate_proposals(const ncnn::Mat& anchors, int stride, const nc
         for (int i = 0; i < num_grid_y; i++) {
             for (int j = 0; j < num_grid_x; j++) {
                 float box_score = feat_blob.channel(q * feat_offset + 4).row(i)[j];
+
                 float box_confidence = sigmoid(box_score);
-                if (box_confidence >= prob_threshold) {
-                    // find class_index with max class_score
-                    int class_index = 0;
-                    float class_score = -FLT_MAX;
-                    for (int k = 0; k < num_class; k++) {
-                        float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
-                        if (score > class_score) {
-                            class_index = k;
-                            class_score = score;
-                        }
-                    }
-
-                    // combined score = box score * class score
-                    float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
-
-                    // filter candidate boxes with combined score >= prob_threshold
-                    if (score >= prob_threshold) {
-                        // yolov5/models/yolo.py Detect forward
-                        // y = x[i].sigmoid()
-                        // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
-                        // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                        float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
-                        float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
-                        float dw = sigmoid(feat_blob.channel(q * feat_offset + 2).row(i)[j]);
-                        float dh = sigmoid(feat_blob.channel(q * feat_offset + 3).row(i)[j]);
-
-                        float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
-                        float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
-                        float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
-                        float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
-
-                        // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
-                        float x0 = cx - bw * 0.5f;
-                        float y0 = cy - bh * 0.5f;
-                        float x1 = cx + bw * 0.5f;
-                        float y1 = cy + bh * 0.5f;
-
-                        // collect candidates
-                        Object obj;
-                        obj.rect.x = x0;
-                        obj.rect.y = y0;
-                        obj.rect.width = x1 - x0;
-                        obj.rect.height = y1 - y0;
-                        obj.label = class_index;
-                        obj.prob = score;
-                        for (int c = 0; c < 32; c++)
-                            obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
-                        objects.push_back(obj);
+                if (box_confidence < prob_threshold)
+                    continue;
+                
+                // find class_index with max class_score
+                int class_index = 0;
+                float class_score = -FLT_MAX;
+                for (int k = 0; k < num_class; k++) {
+                    float score = feat_blob.channel(q * feat_offset + 5 + k).row(i)[j];
+                    if (score > class_score) {
+                        class_index = k;
+                        class_score = score;
                     }
                 }
+
+                // combined score = box score * class score
+                float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
+
+                // filter candidate boxes with combined score >= prob_threshold
+                if (score < prob_threshold)
+                    continue;
+
+                // yolov5/models/yolo.py Detect forward
+                // y = x[i].sigmoid()
+                // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
+                // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+                float dx = sigmoid(feat_blob.channel(q * feat_offset + 0).row(i)[j]);
+                float dy = sigmoid(feat_blob.channel(q * feat_offset + 1).row(i)[j]);
+                float dw = sigmoid(feat_blob.channel(q * feat_offset + 2).row(i)[j]);
+                float dh = sigmoid(feat_blob.channel(q * feat_offset + 3).row(i)[j]);
+                
+                float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
+                float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
+                float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
+                float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
+
+                // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
+                float x0 = cx - bw * 0.5f;
+                float y0 = cy - bh * 0.5f;
+                float x1 = cx + bw * 0.5f;
+                float y1 = cy + bh * 0.5f;
+
+                // collect candidates
+                Object obj;
+                obj.rect.x = x0;
+                obj.rect.y = y0;
+                obj.rect.width = x1 - x0;
+                obj.rect.height = y1 - y0;
+                obj.label = class_index;
+                obj.prob = score;
+
+                for (int c = 0; c < 32; c++)
+                    obj.mask_feat.push_back((float) feat_blob.channel(q * feat_offset + 5 + num_class + c).row(i)[j]);
+
+                objects.push_back(obj);
             }
         }
     }
 }
 
-void Detector::mat_print(const ncnn::Mat& mat) {
-    for (int q = 0; q < mat.c; q++) {
-        const float* ptr = mat.channel(q);
-        for (int z = 0; z < mat.d; z++) {
-            for (int y = 0; y < mat.h; y++) {
-                for (int x = 0; x < mat.w; x++) {
-                    printf("%f ", ptr[x]);
+void Detector::generate_proposals(const ncnn::Mat& anchors,
+                                  int stride,
+                                  const ncnn::Mat& in_pad,
+                                  const ncnn::Mat& feat_blob,
+                                  float prob_threshold,
+                                  std::vector<Object>& objects) {
+    const int num_grid = feat_blob.h;
+    const int num_grid_x = (in_pad.w > in_pad.h) ? (in_pad.w / stride)     : (num_grid / (in_pad.h / stride)); // num_grid / num_grid_y
+    const int num_grid_y = (in_pad.w > in_pad.h) ? (num_grid / num_grid_x) : (in_pad.h / stride);
+
+    const int num_anchors = anchors.w / 2;
+    const int num_class = feat_blob.w - 5 - 32;
+
+    const int feat_offset = num_grid_x;
+    // enumerate all anchor types
+    for (int q = 0; q < num_anchors; q++) {
+        const float anchor_w = anchors[q * 2];
+        const float anchor_h = anchors[q * 2 + 1];
+        for (int i = 0; i < num_grid_y; i++) {
+            for (int j = 0; j < num_grid_x; j++) {
+                const float* featptr = feat_blob.channel(q).row(i * feat_offset + j);
+                float box_score = featptr[4];
+
+                float box_confidence = sigmoid(box_score);
+                if (box_confidence < prob_threshold)
+                    continue;
+                
+                // find class_index with max class_score
+                int class_index = 0;
+                float class_score = -FLT_MAX;
+                for (int k = 0; k < num_class; k++) {
+                    float score = featptr[5 + k];
+                    if (score > class_score) {
+                        class_index = k;
+                        class_score = score;
+                    }
                 }
-                ptr += mat.w;
-                printf("\n");
+
+                // combined score = box score * class score
+                float score = sigmoid(box_score) * sigmoid(class_score); // apply sigmoid first to get normed 0~1 value
+
+                // filter candidate boxes with combined score >= prob_threshold
+                if (score < prob_threshold)
+                    continue;
+
+                // yolov5/models/yolo.py Detect forward
+                // y = x[i].sigmoid()
+                // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
+                // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+                float dx = sigmoid(featptr[0]);
+                float dy = sigmoid(featptr[1]);
+                float dw = sigmoid(featptr[2]);
+                float dh = sigmoid(featptr[3]);
+
+                float cx = (dx * 2.f - 0.5f + j) * stride;  //center x coordinate
+                float cy = (dy * 2.f - 0.5f + i) * stride;  //cennter y coordinate
+                float bw = pow(dw * 2.f, 2.f) * anchor_w;     //box width
+                float bh = pow(dh * 2.f, 2.f) * anchor_h;     //box height
+
+                // transform candidate box (center-x,center-y,w,h) to (x0,y0,x1,y1)
+                float x0 = cx - bw * 0.5f;
+                float y0 = cy - bh * 0.5f;
+                float x1 = cx + bw * 0.5f;
+                float y1 = cy + bh * 0.5f;
+
+                // collect candidates
+                Object obj;
+                obj.rect.x = x0;
+                obj.rect.y = y0;
+                obj.rect.width = x1 - x0;
+                obj.rect.height = y1 - y0;
+                obj.label = class_index;
+                obj.prob = score;
+
+                obj.mask_feat.resize(32);
+                std::copy(featptr + 5 + num_class, featptr + 5 + num_class + 32, obj.mask_feat.begin());
+
+                objects.push_back(obj);
             }
-            printf("\n");
         }
-        printf("------------------------\n");
     }
 }
 
-void Detector::mat_visualize(const char* title, const ncnn::Mat& mat, bool save) {
-    std::vector<cv::Mat> normed_feats(mat.c);
-
-    for (int i = 0; i < mat.c; i++) {
-        cv::Mat tmp(mat.h, mat.w, CV_32FC1, (void*) (const float*) mat.channel(i));
-
-        cv::normalize(tmp, normed_feats[i], 0, 255, cv::NORM_MINMAX, CV_8U);
-
-        cv::cvtColor(normed_feats[i], normed_feats[i], cv::COLOR_GRAY2BGR);
-
-        // check NaN
-        for (int y = 0; y < mat.h; y++) {
-            const float* tp = tmp.ptr<float>(y);
-            uchar* sp = normed_feats[i].ptr<uchar>(y);
-            for (int x = 0; x < mat.w; x++) {
-                float v = tp[x];
-                if (v != v) {
-                    sp[0] = 0;
-                    sp[1] = 0;
-                    sp[2] = 255;
-                }
-                sp += 3;
-            }
-        }
-        if (!save) {
-            cv::imshow(title, normed_feats[i]);
-            cv::waitKey();
-        }
-    }
-
-    if (save) {
-        int tw = mat.w < 10 ? 32 : mat.w < 20 ? 16 : mat.w < 40 ? 8 : mat.w < 80 ? 4 : mat.w < 160 ? 2 : 1;
-        int th = (mat.c - 1) / tw + 1;
-
-        cv::Mat show_map(mat.h * th, mat.w * tw, CV_8UC3);
-        show_map = cv::Scalar(127);
-
-        // tile
-        for (int i = 0; i < mat.c; i++) {
-            int ty = i / tw;
-            int tx = i % tw;
-
-            normed_feats[i].copyTo(show_map(cv::Rect(tx * mat.w, ty * mat.h, mat.w, mat.h)));
-        }
-        cv::resize(show_map, show_map, cv::Size(0, 0), 2, 2, cv::INTER_NEAREST);
-        //cv::imshow(title, show_map);
-        //cv::waitKey();
-        cv::imwrite("masks.jpg", show_map);
-    }
-}
-
-cv::Mat Detector::ncnn2cv(const ncnn::Mat& mat, int c) {
-    std::vector<cv::Mat> normed_feats(mat.c);
-    for (int i = 0; i < mat.c; i++) {
-        cv::Mat tmp(mat.h, mat.w, CV_32FC1, (void*) (const float*) mat.channel(i));
-
-        cv::normalize(tmp, normed_feats[i], 0, 255, cv::NORM_MINMAX, CV_8U);
-
-        cv::cvtColor(normed_feats[i], normed_feats[i], cv::COLOR_GRAY2BGR);
-
-        // check NaN
-        for (int y = 0; y < mat.h; y++) {
-            const float* tp = tmp.ptr<float>(y);
-            uchar* sp = normed_feats[i].ptr<uchar>(y);
-            for (int x = 0; x < mat.w; x++) {
-                float v = tp[x];
-                if (v != v) {
-                    sp[0] = 0;
-                    sp[1] = 0;
-                    sp[2] = 255;
-                }
-                sp += 3;
-            }
-        }
-    }
-    return normed_feats[c];
+void Detector::generate_proposals(Anchor anchor, float prob_threshold, std::vector<Object>& objects) {
+    ncnn::Mat anchor_boxes(6);
+    anchor_boxes[0] = anchor.size[0].width;
+    anchor_boxes[1] = anchor.size[0].height;
+    anchor_boxes[2] = anchor.size[1].width;
+    anchor_boxes[3] = anchor.size[1].height;
+    anchor_boxes[4] = anchor.size[2].width;
+    anchor_boxes[5] = anchor.size[2].height;
+    generate_proposals(anchor_boxes, anchor.stride, anchor.feature_blob , prob_threshold, objects);
 }
 }
