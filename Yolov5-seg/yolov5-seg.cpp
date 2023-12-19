@@ -39,7 +39,7 @@ int thickness = 3;
 
 std::string project = "runs/idcard";
 std::string name    = "exp";
-std::string input   = "data/images/sample.jpg";
+std::string source  = "data/images/sample.jpg";
 std::string model   = "weights/yolov5s-seg-idcard-best-2.ncnn";
 std::string data    = "data/idcard.yaml";
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     argv = parser.ensure_utf8(argv);
 
     parser.GET("--model",                   model, "model file path");
-    parser.GET("-i,--input,--source",       input, "file or folder or 0(webcam)");
+    parser.GET("-i,--input,--source",       source, "file or folder or 0(webcam)");
     parser.GET("--data",                    data, "data file path");
     parser.GET("--imgsz,--img,--img-size",  target_size, "inference size");
     parser.GET("--conf,--conf-thres",       prob_threshold, "confidence threshold");
@@ -100,7 +100,7 @@ int run() {
     Yolo::get_class_names(class_names, dataPath);
 
     std::filesystem::path outputPath = project + "/" + name;
-    std::filesystem::path inputPath = input;
+    std::filesystem::path inputPath = source;
 
     if (!Yolo::isFolder(inputPath)) {
         show = false;
@@ -112,7 +112,7 @@ int run() {
         image(inputPath, outputPath);
         return 0;
     }
-    if (input == "0" or Yolo::isVideo(inputPath)) {
+    if (source == "0" or Yolo::isVideo(inputPath)) {
         video(inputPath.string());
         return 0;
     }
