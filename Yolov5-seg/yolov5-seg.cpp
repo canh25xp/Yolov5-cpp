@@ -5,7 +5,6 @@
 #include <vector>
 #include <filesystem>
 #include <fstream>
-#include <chrono>
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -139,7 +138,7 @@ int run() {
     // Run inference
     int count = paths.size();
     LOG_INFO("Found {} image(s) in folder", count);
-    auto tStart = std::chrono::high_resolution_clock::now();
+    Yolo::Timer timer;
     for (const auto& path : paths) {
         std::vector<Yolo::Object> objects;
         cv::Mat in = cv::imread(path.string());
@@ -259,7 +258,7 @@ int run() {
             LOG_INFO("\nLabels saved at {}", txt_path.string());
         }
     }
-    auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
+    double total = timer.ElapsedMillis();
     double average = total / count;
     LOG_INFO("\n------------------------------------------------\n");
     LOG_INFO("{} images processed\n", count);
