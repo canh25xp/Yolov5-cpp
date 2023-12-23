@@ -137,9 +137,10 @@ int run() {
 
     // Run inference
     int count = paths.size();
-    LOG_INFO("Found {} image(s) in folder", count);
+    int seen = 0;
     Yolo::Timer timer;
     for (const auto& path : paths) {
+        seen++;
         std::vector<Yolo::Object> objects;
         cv::Mat in = cv::imread(path.string());
         if (dynamic)
@@ -157,7 +158,6 @@ int run() {
         std::filesystem::path crop_path     = save_dir / "crop" / path.filename();
 
         const size_t objCount = objects.size();
-        LOG_INFO("Objects count = {}\n", objCount);
 
         int color_index = 0;
         cv::Mat out = in.clone();
@@ -238,7 +238,7 @@ int run() {
             }
         }
 
-        LOG_INFO(labels);
+        LOG_DEBUG(labels);
 
         if (show) {
             cv::imshow("Detect", out);
@@ -248,22 +248,22 @@ int run() {
         if (save) {
             std::filesystem::create_directory(save_dir.string());
             cv::imwrite(save_path.string(), out);
-            LOG_INFO("\nOutput saved at {}", save_path.string());
+            LOG_DEBUG("\nOutput saved at {}", save_path.string());
         }
 
         if (save_txt) {
             std::ofstream txtFile(txt_path);
             txtFile << labels << " " << contours;
             txtFile.close();
-            LOG_INFO("\nLabels saved at {}", txt_path.string());
+            LOG_DEBUG("Labels saved at {}", txt_path.string());
         }
+        LOG_INFO("image {}/{} {} {}", seen, count, path.string(), objCount);
     }
     double total = timer.ElapsedMillis();
     double average = total / count;
-    LOG_INFO("\n------------------------------------------------\n");
-    LOG_INFO("{} images processed\n", count);
-    LOG_INFO("Total time taken: {} ms\n", total);
-    LOG_INFO("Average time taken: {} ms\n", average);
+    LOG_INFO("{} images processed", count);
+    LOG_INFO("Total time taken: {} ms", total);
+    LOG_INFO("Average time taken: {} ms", average);
 
     return 0;
 }
