@@ -21,3 +21,5 @@ docs/*
 !docs/*.drawio
 
 vcpkg
+
+*.exe
