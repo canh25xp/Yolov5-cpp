@@ -5,6 +5,7 @@ data/images/*
 log/*
 runs/*
 build/
+Resources/
 
 # vscode files
 .vscode/*
