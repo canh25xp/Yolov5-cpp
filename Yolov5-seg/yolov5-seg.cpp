@@ -81,6 +81,8 @@ int main(int argc, char** argv) {
     parser.HAS("--draw-minrect",            drawMinRect, "draw min area rect");
     parser.HAS("--exist-ok",                exist_ok, "overide the already existing project/name, do not increment");
 
+    spdlog::set_level(spdlog::level::info);
+
     CLI11_PARSE(parser, argc, argv);
     run();
 
