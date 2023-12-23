@@ -100,6 +100,13 @@ int run() {
     if (save_txt)
         std::filesystem::create_directory(save_dir / "labels");
 
+    if (rotate)
+        std::filesystem::create_directory(save_dir / "rotate");
+
+    if (save_mask)
+        std::filesystem::create_directory(save_dir / "mask");
+        
+
     // Load model weight and param
     if (detector.load(model, half))
         return -1;
@@ -143,13 +150,12 @@ int run() {
 
         std::string fileName = path.filename().string();
         std::string stem = path.stem().string();
-        std::string outputPath = save_dir.string() + "/" + fileName;
-        std::string labelsFolder = save_dir.string() + "/labels";
-        std::string labelsPath = labelsFolder + "/" + stem + ".txt";
-        std::string cropFolder = save_dir.string() + "/crop";
-        std::string maskFolder = save_dir.string() + "/mask";
-        std::string rotateFolder = save_dir.string() + "/rotate";
-        std::string anglePath = rotateFolder + "/" + "angle.txt";
+        std::filesystem::path save_path = save_dir / path.filename();
+        std::filesystem::path txt_path = save_dir / "labels" / path.stem() += ".txt" ;
+        std::filesystem::path rotate_path = save_dir / "rotate" / path.filename();
+        std::filesystem::path mask_path = save_dir / "mask" / path.filename();
+        std::filesystem::path angle_path = save_dir / "rotate" / "angle.txt";
+        std::filesystem::path crop_path = save_dir / "crop" / path.filename();
 
         const size_t objCount = objects.size();
         LOG_INFO("Objects count = {}\n", objCount);
@@ -192,7 +198,7 @@ int run() {
                 Yolo::draw_mask(out, obj.cv_mask, color);
 
             //std::string saveFileName = stem + "_" + std::to_string(i) + "_" + class_names[obj.label] + ".jpg";
-            std::string saveFileName = fileName;
+            // std::string saveFileName = fileName;
 
         float rotAngle = 0;
         if (rotate) {
@@ -205,31 +211,25 @@ int run() {
                     Yolo::draw_RotatedRect(out, rr, cv::Scalar(0, 255, 0), thickness);
                 rotAngle = Yolo::getRotatedRectImg(in, rotated, rr);
             }
-            // BUG:parent folder have not created
-            std::filesystem::create_directory(rotateFolder);
-            std::string rotatePath = rotateFolder + "/" + saveFileName;
+
             if (show)
                 cv::imshow("Rotated", rotated);
             if (save)
-                cv::imwrite(rotatePath, rotated);
+                cv::imwrite(rotate_path.string(), rotated);
 
                 std::ofstream angle;
-                angle.open(anglePath, std::ios::app);
+                angle.open(angle_path, std::ios::app);
                 angle << stem << " " << std::to_string(rotAngle) << std::endl;
                 angle.close();
             }
 
             if (crop) {
-                std::filesystem::create_directory(cropFolder);
                 cv::Mat RoI(in, obj.rect); //Region Of Interest
-                std::string cropPath = cropFolder + "/" + saveFileName;
-                cv::imwrite(cropPath, RoI);
+                cv::imwrite(crop_path.string(), RoI);
             }
 
             if (save_mask) {
-                std::filesystem::create_directory(maskFolder);
-                std::string maskPath = maskFolder + "/" + saveFileName;
-                cv::imwrite(maskPath, binMask);
+                cv::imwrite(mask_path.string(), binMask);
             }
 
             if (save_txt) {
@@ -248,16 +248,15 @@ int run() {
 
         if (save) {
             std::filesystem::create_directory(save_dir.string());
-            cv::imwrite(outputPath, out);
-            LOG_INFO("\nOutput saved at {}", outputPath);
+            cv::imwrite(save_path.string(), out);
+            LOG_INFO("\nOutput saved at {}", save_path.string());
         }
 
         if (save_txt) {
-            std::filesystem::create_directory(labelsFolder);
-            std::ofstream txtFile(labelsPath);
+            std::ofstream txtFile(txt_path);
             txtFile << labels << " " << contours;
             txtFile.close();
-            LOG_INFO("\nLabels saved at {}", labelsPath);
+            LOG_INFO("\nLabels saved at {}", txt_path.string());
         }
     }
     auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
