@@ -96,9 +96,9 @@ int run() {
     bool is_webcam = true ? (source == "0") : false;
 
     // Directories
-    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred() /= name, exist_ok, "", save);
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project) / name, exist_ok, "", save);
     if (save_txt)
-        std::filesystem::create_directory(save_dir /= "labels");
+        std::filesystem::create_directory(save_dir / "labels");
 
     // Load model weight and param
     if (detector.load(model, half))
