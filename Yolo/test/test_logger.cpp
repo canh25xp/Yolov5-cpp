@@ -7,6 +7,7 @@ int main() {
     Yolo::Logger::Init();
     std::string info = "rachel";
     LOG_TRACE("hi {}", info);
+    LOG_DEBUG("hello {}", "rachel");
     LOG_INFO("lmao");
     LOG_WARN("bruh");
     LOG_ERROR("ohno");
