@@ -29,6 +29,7 @@ bool half = true;
 bool noBbox = false;
 bool noLabel = false;
 bool drawMinRect = false;
+bool exist_ok = false;
 
 int target_size = 640;
 float prob_threshold = 0.25f;
@@ -49,8 +50,6 @@ Yolo::Detector detector;
 
 int run();
 void video(std::string inputPath);
-void image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder);
-void folder(const std::filesystem::path& inputFolder, const std::filesystem::path& outputFolder);
 
 int main(int argc, char** argv) {
     Yolo::Logger::Init();
@@ -81,6 +80,7 @@ int main(int argc, char** argv) {
     parser.HAS("--no-bbox",                 noBbox, "no draw bounding box");
     parser.HAS("--no-label,--hide-labels",  noLabel, "no draw label");
     parser.HAS("--draw-minrect",            drawMinRect, "draw min area rect");
+    parser.HAS("--exist-ok",                exist_ok, "overide the already existing project/name, do not increment");
 
     CLI11_PARSE(parser, argc, argv);
     run();
@@ -89,100 +89,110 @@ int main(int argc, char** argv) {
 }
 
 int run() {
-    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred()/=name);
-    bool isURL = Yolo::isURL(source);
-    bool isImage = Yolo::isImage(source);
-    bool isVideo = Yolo::isVideo(source);
-    bool webcam = true ? (source == "0") : false;
+    bool is_url = Yolo::isURL(source);
+    bool is_folder = Yolo::isFolder(source);
+    bool is_image = Yolo::isImage(source);
+    bool is_video = Yolo::isVideo(source);
+    bool is_webcam = true ? (source == "0") : false;
 
+    // Directories
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project).make_preferred() /= name, exist_ok, "", save);
+    if (save_txt)
+        std::filesystem::create_directory(save_dir /= "labels");
+
+    // Load model weight and param
     if (detector.load(model, half))
         return -1;
 
-    std::filesystem::path dataPath = data;
+    std::vector<std::filesystem::path> paths {};
 
+    // Load data
+    if (is_webcam) {
+        // TODO: implement this
+        return -1;
+    }
+    else if (is_video) {
+        // TODO: implement this
+        return -1;
+    }
+    else if (is_url){
+        // TODO: implement this
+        return -1;
+    }
+    else if (is_image){
+        paths.push_back(source);
+    }
+    else if (is_folder) {
+        paths = Yolo::getListFileDirs(source); // Get Images dirs in folder
+    }
+
+    std::filesystem::path dataPath = data;
     Yolo::get_class_names(class_names, dataPath);
 
-    std::filesystem::path inputPath = source;
-
-    if (!Yolo::isFolder(inputPath)) {
-        show = false;
-        folder(inputPath, save_dir);
-        return 0;
-    }
-
-    if (Yolo::isImage(inputPath)) {
-        image(inputPath, save_dir);
-        return 0;
-    }
-    if (source == "0" or Yolo::isVideo(inputPath)) {
-        video(inputPath.string());
-        return 0;
-    }
-
-    LOG_ERROR("input type not supported");
-    return -1;
-}
-
-void image(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
-    std::vector<Yolo::Object> objects;
-    cv::Mat in = cv::imread(inputPath.string());
-    if (dynamic)
-        detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
-    else
-        detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
-
-    std::string fileName = inputPath.filename().string();
-    std::string stem = inputPath.stem().string();
-    std::string outputPath = outputFolder.string() + "/" + fileName;
-    std::string labelsFolder = outputFolder.string() + "/labels";
-    std::string labelsPath = labelsFolder + "/" + stem + ".txt";
-    std::string cropFolder = outputFolder.string() + "/crop";
-    std::string maskFolder = outputFolder.string() + "/mask";
-    std::string rotateFolder = outputFolder.string() + "/rotate";
-    std::string anglePath = rotateFolder + "/" + "angle.txt";
-
-    const size_t objCount = objects.size();
-    LOG_INFO("Objects count = {}\n", objCount);
-
-    int color_index = 0;
-    cv::Mat out = in.clone();
-    int colorMode = Yolo::colorMode::byClass;
-    std::string labels; // class-index confident center-x center-y box-width box-height
-    std::string contours; // x y contours points
-    for (int i = 0; i < objCount; i++) {
-        const auto& obj = objects[i];
-        if (colorMode == Yolo::colorMode::byClass)
-            color_index = obj.label;
-        if (colorMode == Yolo::colorMode::byIndex)
-            color_index = i;
-
-        const unsigned char* color = Yolo::colors[color_index % 80];
-        cv::Scalar cc(color[0], color[1], color[2]);
-
-        char line[256];
-        //class-index confident center-x center-y box-width box-height
-        sprintf(line, "%i %f %i %i %i %i", obj.label, obj.prob, (int) round(obj.rect.tl().x), (int) round(obj.rect.tl().y), (int) round(obj.rect.br().x), (int) round(obj.rect.br().y));
-        labels.append(line);
-        if (i != objCount - 1)
-            labels.append("\n");
-
-        if (!noBbox)
-            cv::rectangle(out, obj.rect, cc, thickness);
-
-        if (!noLabel)
-            Yolo::draw_label(out, obj.rect, class_names[obj.label] + " " + cv::format("%.2f", obj.prob * 100) + "%");
-
-        cv::Mat binMask;
-        cv::threshold(obj.cv_mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization
-
-        std::vector<cv::Point> contour = Yolo::mask2segment(obj.cv_mask);
-        if (drawContour)
-            cv::polylines(out, contour, true, cc, thickness);
+    // Run inference
+    int count = paths.size();
+    LOG_INFO("Found {} image(s) in folder", count);
+    auto tStart = std::chrono::high_resolution_clock::now();
+    for (const auto& path : paths) {
+        std::vector<Yolo::Object> objects;
+        cv::Mat in = cv::imread(path.string());
+        if (dynamic)
+            detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
         else
-            Yolo::draw_mask(out, obj.cv_mask, color);
+            detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
-        //std::string saveFileName = stem + "_" + std::to_string(i) + "_" + class_names[obj.label] + ".jpg";
-        std::string saveFileName = fileName;
+        std::string fileName = path.filename().string();
+        std::string stem = path.stem().string();
+        std::string outputPath = save_dir.string() + "/" + fileName;
+        std::string labelsFolder = save_dir.string() + "/labels";
+        std::string labelsPath = labelsFolder + "/" + stem + ".txt";
+        std::string cropFolder = save_dir.string() + "/crop";
+        std::string maskFolder = save_dir.string() + "/mask";
+        std::string rotateFolder = save_dir.string() + "/rotate";
+        std::string anglePath = rotateFolder + "/" + "angle.txt";
+
+        const size_t objCount = objects.size();
+        LOG_INFO("Objects count = {}\n", objCount);
+
+        int color_index = 0;
+        cv::Mat out = in.clone();
+        int colorMode = Yolo::colorMode::byClass;
+        std::string labels; // class-index confident center-x center-y box-width box-height
+        std::string contours; // x y contours points
+        for (int i = 0; i < objCount; i++) {
+            const auto& obj = objects[i];
+            if (colorMode == Yolo::colorMode::byClass)
+                color_index = obj.label;
+            if (colorMode == Yolo::colorMode::byIndex)
+                color_index = i;
+
+            const unsigned char* color = Yolo::colors[color_index % 80];
+            cv::Scalar cc(color[0], color[1], color[2]);
+
+            char line[256];
+            //class-index confident center-x center-y box-width box-height
+            sprintf(line, "%i %f %i %i %i %i", obj.label, obj.prob, (int) round(obj.rect.tl().x), (int) round(obj.rect.tl().y), (int) round(obj.rect.br().x), (int) round(obj.rect.br().y));
+            labels.append(line);
+            if (i != objCount - 1)
+                labels.append("\n");
+
+            if (!noBbox)
+                cv::rectangle(out, obj.rect, cc, thickness);
+
+            if (!noLabel)
+                Yolo::draw_label(out, obj.rect, class_names[obj.label] + " " + cv::format("%.2f", obj.prob * 100) + "%");
+
+            cv::Mat binMask;
+            cv::threshold(obj.cv_mask, binMask, 0.5, 255, cv::ThresholdTypes::THRESH_BINARY); // Mask Binarization
+
+            std::vector<cv::Point> contour = Yolo::mask2segment(obj.cv_mask);
+            if (drawContour)
+                cv::polylines(out, contour, true, cc, thickness);
+            else
+                Yolo::draw_mask(out, obj.cv_mask, color);
+
+            //std::string saveFileName = stem + "_" + std::to_string(i) + "_" + class_names[obj.label] + ".jpg";
+            std::string saveFileName = fileName;
 
         float rotAngle = 0;
         if (rotate) {
@@ -203,76 +213,61 @@ void image(const std::filesystem::path& inputPath, const std::filesystem::path& 
             if (save)
                 cv::imwrite(rotatePath, rotated);
 
-            std::ofstream angle;
-            angle.open(anglePath, std::ios::app);
-            angle << stem << " " << std::to_string(rotAngle) << std::endl;
-            angle.close();
+                std::ofstream angle;
+                angle.open(anglePath, std::ios::app);
+                angle << stem << " " << std::to_string(rotAngle) << std::endl;
+                angle.close();
+            }
+
+            if (crop) {
+                std::filesystem::create_directory(cropFolder);
+                cv::Mat RoI(in, obj.rect); //Region Of Interest
+                std::string cropPath = cropFolder + "/" + saveFileName;
+                cv::imwrite(cropPath, RoI);
+            }
+
+            if (save_mask) {
+                std::filesystem::create_directory(maskFolder);
+                std::string maskPath = maskFolder + "/" + saveFileName;
+                cv::imwrite(maskPath, binMask);
+            }
+
+            if (save_txt) {
+                for (auto& point : contour) {
+                    contours.append(cv::format("%i %i ", point.x, point.y));
+                }
+            }
         }
 
-        if (crop) {
-            std::filesystem::create_directory(cropFolder);
-            cv::Mat RoI(in, obj.rect); //Region Of Interest
-            std::string cropPath = cropFolder + "/" + saveFileName;
-            cv::imwrite(cropPath, RoI);
+        LOG_INFO(labels);
+
+        if (show) {
+            cv::imshow("Detect", out);
+            cv::waitKey();
         }
 
-        if (save_mask) {
-            std::filesystem::create_directory(maskFolder);
-            std::string maskPath = maskFolder + "/" + saveFileName;
-            cv::imwrite(maskPath, binMask);
+        if (save) {
+            std::filesystem::create_directory(save_dir.string());
+            cv::imwrite(outputPath, out);
+            LOG_INFO("\nOutput saved at {}", outputPath);
         }
 
         if (save_txt) {
-            for (auto& point : contour) {
-                contours.append(cv::format("%i %i ", point.x, point.y));
-            }
-        }
-    }
-
-    LOG_INFO(labels);
-
-    if (show) {
-        cv::imshow("Detect", out);
-        cv::waitKey();
-    }
-
-    if (save) {
-        std::filesystem::create_directory(outputFolder.string());
-        cv::imwrite(outputPath, out);
-        LOG_INFO("\nOutput saved at {}", outputPath);
-    }
-
-    if (save_txt) {
-        std::filesystem::create_directory(labelsFolder);
-        std::ofstream txtFile(labelsPath);
-        txtFile << labels << " " << contours;
-        txtFile.close();
-        LOG_INFO("\nLabels saved at {}", labelsPath);
-    }
-}
-
-void folder(const std::filesystem::path& inputPath, const std::filesystem::path& outputFolder) {
-    LOG_INFO("Auto running on all images in the input folder");
-    int count = 0;
-    auto tStart = std::chrono::high_resolution_clock::now();
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(inputPath)) {
-        std::string path = entry.path().string();
-        LOG_INFO("\n------------------------------------------------\n");
-        LOG_INFO("{}\n", path);
-        if (Yolo::isImage(path)) {
-            count++;
-            image(entry.path(), outputFolder);
-        }
-        else {
-            LOG_INFO("skipping non image file");
+            std::filesystem::create_directory(labelsFolder);
+            std::ofstream txtFile(labelsPath);
+            txtFile << labels << " " << contours;
+            txtFile.close();
+            LOG_INFO("\nLabels saved at {}", labelsPath);
         }
     }
     auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tStart).count();
     double average = total / count;
     LOG_INFO("\n------------------------------------------------\n");
     LOG_INFO("{} images processed\n", count);
-    LOG_INFO("Total time taken: {} ms\n",total);
+    LOG_INFO("Total time taken: {} ms\n", total);
     LOG_INFO("Average time taken: {} ms\n", average);
+
+    return 0;
 }
 
 void video(std::string inputPath) {

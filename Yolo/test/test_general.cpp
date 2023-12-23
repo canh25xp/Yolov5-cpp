@@ -22,5 +22,12 @@ int main() {
     cv::imshow("image from url", img);
     cv::waitKey();
 
+    // Test Folder
+    std::string dirPath = "data/images";
+    auto dirs = Yolo::getListFileDirs(dirPath);
+    for (const auto& dir : dirs) {
+        cout << dir << endl;
+    }
+
     return 0;
 }
