@@ -4,6 +4,7 @@
 namespace Yolo {
 class Timer {
 public:
+    Timer();
     Timer(double& elapsedTime);
     ~Timer();
 

@@ -3,7 +3,12 @@
 
 using namespace std::chrono;
 
-namespace Yolo{
+namespace Yolo {
+
+Timer::Timer() : m_elapsedTime(*new double(0.0)) {
+    Reset();
+}
+
 Timer::Timer(double& elapsedTime) : m_elapsedTime(elapsedTime) {
     Reset();
 }
