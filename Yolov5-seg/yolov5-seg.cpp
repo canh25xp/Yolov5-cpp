@@ -148,14 +148,14 @@ int run() {
         else
             detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
 
-        std::string fileName = path.filename().string();
-        std::string stem = path.stem().string();
-        std::filesystem::path save_path = save_dir / path.filename();
-        std::filesystem::path txt_path = save_dir / "labels" / path.stem() += ".txt" ;
-        std::filesystem::path rotate_path = save_dir / "rotate" / path.filename();
-        std::filesystem::path mask_path = save_dir / "mask" / path.filename();
-        std::filesystem::path angle_path = save_dir / "rotate" / "angle.txt";
-        std::filesystem::path crop_path = save_dir / "crop" / path.filename();
+        std::string fileName                = path.filename().string();
+        std::string fileNameNoExt           = path.stem().string();
+        std::filesystem::path save_path     = save_dir / path.filename();
+        std::filesystem::path txt_path      = save_dir / "labels" / path.stem() += ".txt" ;
+        std::filesystem::path rotate_path   = save_dir / "rotate" / path.filename();
+        std::filesystem::path mask_path     = save_dir / "mask" / path.filename();
+        std::filesystem::path angle_path    = save_dir / "rotate" / "angle.txt";
+        std::filesystem::path crop_path     = save_dir / "crop" / path.filename();
 
         const size_t objCount = objects.size();
         LOG_INFO("Objects count = {}\n", objCount);
@@ -219,7 +219,7 @@ int run() {
 
                 std::ofstream angle;
                 angle.open(angle_path, std::ios::app);
-                angle << stem << " " << std::to_string(rotAngle) << std::endl;
+                angle << fileNameNoExt << " " << std::to_string(rotAngle) << std::endl;
                 angle.close();
             }
 
