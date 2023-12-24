@@ -207,9 +207,6 @@ int run() {
             else
                 Yolo::draw_mask(out, obj.cv_mask, color);
 
-            //std::string saveFileName = stem + "_" + std::to_string(i) + "_" + class_names[obj.label] + ".jpg";
-            // std::string saveFileName = fileName;
-
         float rotAngle = 0;
         if (rotate) {
             cv::Mat rotated;
