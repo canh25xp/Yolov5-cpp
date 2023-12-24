@@ -123,9 +123,8 @@ int run() {
         // TODO: implement this
         return -1;
     }
-    else if (is_url){
-        // TODO: implement this
-        return -1;
+    else if (is_url) {
+        paths.push_back(Yolo::get_from_url(source));
     }
     else if (is_image){
         paths.push_back(source);
