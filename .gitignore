@@ -1,6 +1,7 @@
 # Assets
 screenshots/*
 data/images/*
+data/tmp/
 !data/images/sample.jpg
 log/*
 runs/*
