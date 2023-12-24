@@ -55,7 +55,7 @@ bool isURL(const std::string& path) {
 }
 
 std::filesystem::path get_from_url(const std::string& url, const std::filesystem::path& save_dir) {
-    return imutils::download_image(url);
+    return imutils::download_image(url, save_dir);
 }
 
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {

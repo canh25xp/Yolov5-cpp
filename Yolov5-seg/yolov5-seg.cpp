@@ -124,7 +124,7 @@ int run() {
         return -1;
     }
     else if (is_url) {
-        paths.push_back(Yolo::get_from_url(source));
+        paths.push_back(Yolo::get_from_url(source, "data/tmp"));
     }
     else if (is_image){
         paths.push_back(source);
