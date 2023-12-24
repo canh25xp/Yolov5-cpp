@@ -154,7 +154,7 @@ int run() {
         std::filesystem::path save_path     = save_dir / path.filename();
         std::filesystem::path txt_path      = save_dir / "labels" / path.stem() += ".txt" ;
         std::filesystem::path rotate_path   = save_dir / "rotate" / path.filename();
-        std::filesystem::path mask_path     = save_dir / "mask" / path.filename();
+        std::filesystem::path mask_path     = save_dir / "mask" / path.stem() += ".png";
         std::filesystem::path angle_path    = save_dir / "rotate" / "angle.txt";
         std::filesystem::path crop_path     = save_dir / "crop" / path.filename();
 
