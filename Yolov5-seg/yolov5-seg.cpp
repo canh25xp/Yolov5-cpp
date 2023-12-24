@@ -155,9 +155,9 @@ int run() {
         std::vector<Yolo::Object> objects;
         cv::Mat in = cv::imread(path.string());
         if (dynamic)
-            detector.detect_dynamic(in, objects, target_size, prob_threshold, agnostic, max_object);
+            detector.detect_dynamic(in, objects, target_size, prob_threshold, nms_threshold, agnostic, max_object);
         else
-            detector.detect(in, objects, target_size, prob_threshold, agnostic, max_object);
+            detector.detect(in, objects, target_size, prob_threshold, nms_threshold, agnostic, max_object);
 
         std::string fileName                = path.filename().string();
         std::string fileNameNoExt           = path.stem().string();
