@@ -2,6 +2,7 @@
 	path = ThirdParty/imutils-cpp
 	url = https://github.com/canh25xp/imutils-cpp
 	shallow = true
+	branch = .
 [submodule "yaml-cpp"]
 	path = ThirdParty/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
