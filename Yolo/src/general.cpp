@@ -4,8 +4,6 @@
 #include <string>
 #include <filesystem>
 
-#include <opencv2/core/mat.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <imutils/paths.hpp>
 
 namespace Yolo {
