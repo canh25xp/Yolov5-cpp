@@ -21,6 +21,8 @@ bool isFolder(const std::filesystem::path& path);
 
 bool isURL(const std::string& path);
 
+std::filesystem::path get_from_url(const std::string& url, const std::filesystem::path& save_dir = "tmp");
+
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok = false, const std::string& sep = "", bool mkdir = false);
 
 std::vector<std::filesystem::path> getListFileDirs(const std::filesystem::path& basePath);

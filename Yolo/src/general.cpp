@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include <imutils/paths.hpp>
+#include <imutils/convenience.hpp>
 
 namespace Yolo {
 
@@ -51,6 +52,10 @@ bool isURL(const std::string& path) {
         }
     }
     return false;
+}
+
+std::filesystem::path get_from_url(const std::string& url, const std::filesystem::path& save_dir) {
+    return imutils::download_image(url);
 }
 
 std::filesystem::path increment_path(const std::filesystem::path& pathStr, bool exist_ok, const std::string& sep, bool mkdir) {
