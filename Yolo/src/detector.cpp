@@ -136,7 +136,7 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
 
     // apply non max suppression
     std::vector<int> picked;
-    nms_sorted_bboxes(proposals, picked, nms_threshold, agnostic);
+    nms_sorted_bboxes(proposals, picked, nms_threshold, agnostic, max);
 
     // collect final result after nms
     const int count = picked.size();
@@ -151,9 +151,8 @@ int Detector::detect(const cv::Mat& bgr, std::vector<Object>& objects, int targe
     ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
-    int objCount = (count > max) ? max : count;
-    objects.resize(objCount);
-    for (int i = 0; i < objCount; i++) {
+    objects.resize(count);
+    for (int i = 0; i < count; i++) {
         objects[i] = proposals[picked[i]];
 
         // adjust offset to original unpadded
@@ -340,7 +339,7 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
 
     // apply non max suppression
     std::vector<int> picked;
-    nms_sorted_bboxes(proposals, picked, nms_threshold, agnostic);
+    nms_sorted_bboxes(proposals, picked, nms_threshold, agnostic, max);
 
     // collect final result after nms
     const int count = picked.size();
@@ -355,9 +354,8 @@ int Detector::detect_dynamic(const cv::Mat& bgr, std::vector<Object>& objects, i
     ex.extract(seg_blob, mask_proto);
     decode_mask(mask_feat, img_w, img_h, mask_proto, in_pad, wpad, hpad, mask_pred_result);
 
-    int objCount = (count > max) ? max : count;
-    objects.resize(objCount);
-    for (int i = 0; i < objCount; i++) {
+    objects.resize(count);
+    for (int i = 0; i < count; i++) {
         objects[i] = proposals[picked[i]];
 
         // adjust offset to original unpadded
@@ -448,7 +446,7 @@ void Detector::qsort_descent_inplace(std::vector<Object>& faceobjects) {
     qsort_descent_inplace(faceobjects, 0, faceobjects.size() - 1);
 }
 
-void Detector::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic) {
+void Detector::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic, int max_det) {
     picked.clear();
 
     const int n = faceobjects.size();
@@ -458,10 +456,10 @@ void Detector::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::ve
         areas[i] = faceobjects[i].rect.area();
     }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n && picked.size() < max_det; i++) {
         const Object& a = faceobjects[i];
 
-        int keep = 1;
+        bool keep = 1;
         for (int j = 0; j < (int) picked.size(); j++) {
             const Object& b = faceobjects[picked[j]];
 

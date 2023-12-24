@@ -97,6 +97,6 @@ private:
     /// @param picked picked objects index vector
     /// @param nms_threshold Non max suppression threshold
     /// @param agnostic
-    void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic = true);
+    void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold, bool agnostic = true, int max_det = 300);
 };
 }
