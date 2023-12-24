@@ -97,16 +97,26 @@ int run() {
     bool is_webcam = true ? (source == "0") : false;
 
     // Directories
-    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project) / name, exist_ok, "", save);
+    std::filesystem::path save_dir = Yolo::increment_path(std::filesystem::path(project) / name, exist_ok);
+    std::filesystem::path txt_dir = save_dir / "labels";
+    std::filesystem::path rotate_dir = save_dir / "rotate";
+    std::filesystem::path mask_dir = save_dir / "mask";
+    std::filesystem::path crop_dir = save_dir / "crop";
+
+    if (save)
+        std::filesystem::create_directory(save_dir);
+    
     if (save_txt)
-        std::filesystem::create_directory(save_dir / "labels");
+        std::filesystem::create_directory(txt_dir);
 
     if (rotate)
-        std::filesystem::create_directory(save_dir / "rotate");
+        std::filesystem::create_directory(rotate_dir);
 
     if (save_mask)
-        std::filesystem::create_directory(save_dir / "mask");
-        
+        std::filesystem::create_directory(mask_dir);
+
+    if (crop)
+        std::filesystem::create_directory(crop_dir);
 
     // Load model weight and param
     if (detector.load(model, half))
@@ -152,11 +162,11 @@ int run() {
         std::string fileName                = path.filename().string();
         std::string fileNameNoExt           = path.stem().string();
         std::filesystem::path save_path     = save_dir / path.filename();
-        std::filesystem::path txt_path      = save_dir / "labels" / path.stem() += ".txt" ;
-        std::filesystem::path rotate_path   = save_dir / "rotate" / path.filename();
-        std::filesystem::path mask_path     = save_dir / "mask" / path.stem() += ".png";
-        std::filesystem::path angle_path    = save_dir / "rotate" / "angle.txt";
-        std::filesystem::path crop_path     = save_dir / "crop" / path.filename();
+        std::filesystem::path txt_path      = txt_dir / path.stem() += ".txt" ;
+        std::filesystem::path rotate_path   = rotate_dir / path.filename();
+        std::filesystem::path mask_path     = mask_dir / path.stem() += ".png";
+        std::filesystem::path angle_path    = rotate_dir / "angle.txt";
+        std::filesystem::path crop_path     = crop_dir / path.filename();
 
         const size_t objCount = objects.size();
 
