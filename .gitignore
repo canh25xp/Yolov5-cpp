@@ -20,3 +20,4 @@ docs/*
 !docs/*.drawio
 
 vcpkg
+Resources
